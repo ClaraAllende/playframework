@@ -1004,9 +1004,10 @@ object RoutesCompiler {
     } else {
       r.call.packageName + "." + r.call.controller + "." + r.call.method
     }
-    val paramPart = r.call.parameters.map { params =>
-      params.map(paramFormat).mkString(", ")
-    }.map("(" + _ + ")").getOrElse("")
+     val paramPart = r.call.parameters.map { params =>
+       params.map(paramFormat).mkString(", ")
+     }.map("(" + _ + ")")
+      .getOrElse("")
     methodPart + paramPart
   }
 
@@ -1019,8 +1020,8 @@ object RoutesCompiler {
         val pattern = "PathPattern(List(StaticPart(Routes.prefix)" + { if (r.path.parts.isEmpty) "" else """,StaticPart(Routes.defaultPrefix),""" } + r.path.parts.map(_.toString).mkString(",") + "))"
         val fakeCall = controllerMethodCall(r, p => s"fakeValue[${p.typeName}]")
         val handlerDef = """HandlerDef(this.getClass.getClassLoader, """" + routerPackage + """", """" + r.call.packageName + "." + r.call.controller + """", """" + r.call.method + """", """ + r.call.parameters.filterNot(_.isEmpty).map { params =>
-          params.map("classOf[" + _.typeName + "]").mkString(", ")
-        }.map("Seq(" + _ + ")").getOrElse("Nil") + ""","""" + r.verb + """", """ + "\"\"\"" + r.comments.map(_.comment).mkString("\n") + "\"\"\", Routes.prefix + \"\"\"" + r.path + "\"\"\")"
+          params.map("classOf[" + _.typeName + "]")
+        }.map("(" + _ + ")").getOrElse("Nil") + ""","""" + r.verb + """", """ + "\"\"\"" + r.comments.map(_.comment).mkString("\n") + "\"\"\", Routes.prefix + \"\"\"" + r.path + "\"\"\")"
         s"""
            |${markLines(r)}
            |private[this] lazy val ${routeIdent(r, i)} = Route("${r.verb.value}", ${pattern})
@@ -1081,11 +1082,12 @@ object RoutesCompiler {
             }.getOrElse {
               """params.""" + (if (r.path.has(p.name)) "fromPath" else "fromQuery") + """[""" + p.typeName + """]("""" + p.name + """", """ + p.default.map("Some(" + _ + ")").getOrElse("None") + """)"""
             }
-          }.mkString(", ")
+          }
         }.map("(" + _ + ")").getOrElse("")
         val localNames = r.call.parameters.filterNot(_.isEmpty).map { params =>
-          params.map(x => safeKeyword(x.name)).mkString(", ")
-        }.map("(" + _ + ") =>").getOrElse("")
+          params.map(x => safeKeyword(x.name) + ": " + x.typeName).mkString(",")
+        }.map("case List(" + _ + ") =>")
+          .getOrElse("")
         val call = controllerMethodCall(r, x => safeKeyword(x.name))
         s"""
             |${markLines(r)}
