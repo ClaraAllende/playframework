@@ -325,10 +325,9 @@ object Router {
 
     def call(generator : => Handler) = generator
 
-    def call(params: List[Param[_]])(generator: (List[_]) => Handler) : Handler = {
-      //hack(ish): if there aren't any lefts, then we can just use the first Either, and call the controller with the whole parameter list.
-      (params.find(_.value.isLeft)).getOrElse(params.head)
-        .value.fold(badRequest, { x => generator(params.map(_.value.right.get))})
+    def call[T](params: List[Param[_]])(generator: (Seq[_]) => Handler) : Handler = {
+      (params.foldLeft[Either[String, Seq[_]]](Right(Seq[T]()))
+      {(seq, param) => seq.right.flatMap(s => param.value.right.map(s :+ _))}).fold(badRequest, generator)
     }
 
     def handlerFor(request: RequestHeader): Option[Handler] = {
