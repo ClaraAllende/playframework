@@ -325,10 +325,9 @@ object Router {
 
     def call(generator : => Handler) = generator
 
-    def call[T](params: List[Param[_]])(generator: (Seq[_]) => Handler) : Handler = {
-      (params.foldLeft[Either[String, Seq[_]]](Right(Seq[T]()))
-      {(seq, param) => seq.right.flatMap(s => param.value.right.map(s :+ _))}).fold(badRequest, generator)
-    }
+    def call[T](params: List[Param[_]])(generator: (Seq[_]) => Handler) : Handler =
+      (params.foldLeft[Either[String, Seq[_]]](Right(Seq[T]())){(seq, param) => seq.right.flatMap(s => param.value.right.map(s :+ _))}).fold(badRequest, generator)
+
 
     def handlerFor(request: RequestHeader): Option[Handler] = {
       routes.lift(request)
