@@ -5,6 +5,7 @@ package play.forkrun.protocol
 
 import java.io.File
 import scala.util.{ Success, Failure }
+import sbt.protocol._
 
 case class ForkConfig(
   projectDirectory: File,
