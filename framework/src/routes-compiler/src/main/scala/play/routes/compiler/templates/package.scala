@@ -90,7 +90,7 @@ package object templates {
         }.getOrElse {
           """params.""" + (if (route.path.has(p.name)) "fromPath" else "fromQuery") + """[""" + p.typeName + """]("""" + p.name + """", """ + p.default.map("Some(" + _ + ")").getOrElse("None") + """)"""
         }
-      }.mkString(", ")
+      }
     }.map("(" + _ + ")").getOrElse("")
   }
 
@@ -99,8 +99,8 @@ package object templates {
    */
   def localNames(route: Route) = {
     route.call.parameters.filterNot(_.isEmpty).map { params =>
-      params.map(x => safeKeyword(x.name)).mkString(", ")
-    }.map("(" + _ + ") =>").getOrElse("")
+      params.map(x => safeKeyword(x.name) + ": " + x.typeName).mkString(", ")
+    }.map("case List(" + _ + ") =>").getOrElse("")
   }
 
   /**
@@ -342,7 +342,9 @@ package object templates {
    */
   def refCall(route: Route, useInjector: Route => Boolean): String = {
     val controllerRef = s"${route.call.packageName}.${route.call.controller}"
-    val methodCall = s"${route.call.method}(${route.call.parameters.getOrElse(Nil).map(x => safeKeyword(x.name)).mkString(", ")})"
+    val methodCall = s"${route.call.method}(${
+      route.call.parameters.getOrElse(Nil).map(x => safeKeyword(x.name)).mkString(", ")
+    })"
     if (useInjector(route)) {
       s"$Injector.instanceOf(classOf[$controllerRef]).$methodCall"
     } else {
