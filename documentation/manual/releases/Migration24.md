@@ -33,9 +33,13 @@ libraryDependencies += specs2 % Test
 resolvers += "scalaz-bintray" at "http://dl.bintray.com/scalaz/releases"
 ```
 
-### IntelliJ IDEA
+### IDEs: Eclipse and IntelliJ IDEA
 
-Play no longer includes the sbt idea plugin.  IntelliJ is now able to import sbt projects natively, so we recommend using that instead.  Alternatively, the sbt idea plugin can be manually installed and used, instructions can be found [here](https://github.com/mpeltonen/sbt-idea).
+Play no longer includes the sbteclipse or sbt-idea plugins, which enables users to upgrade IDE support independently of Play.
+
+Eclipse support can be setup with as little as one extra line to import the plugin. See the [[documentation|IDE]] for details.
+
+IntelliJ is now able to import sbt projects natively, so we recommend using that instead.  Alternatively, the sbt-idea plugin can be manually installed and used, instructions can be found [here](https://github.com/mpeltonen/sbt-idea).
 
 ### Play SBT plugin API
 
@@ -166,6 +170,14 @@ Additionally, Play has now better namespaced a large number of its configuration
 | `application.lang.cookie` | `play.i18n.langCookieName`         |
 | `parsers.text.maxLength`  | `play.http.parser.maxMemoryBuffer` |
 | `csrf`                    | `play.filters.csrf`                |
+
+### Akka configuration
+
+Play 2.4 now has just one actor system. Before, the internal actor system was configured under `play.akka` and the Akka plugin was configured under `akka`. The new combined actor system is configured under `akka`. There is no actor system configuration under `play.akka` anymore. However, several Play specific settings are still given under the `play.akka` prefix.
+
+If you want to change how the actor system is configured, you can set `play.akka.config = "my-akka"`, where `my-akka` is your chosen configuration prefix.
+
+See the [[Java|JavaAkka]] or [[Scala|ScalaAkka]] Akka page for more information.
 
 ### Logging
 
@@ -430,3 +442,10 @@ The API should be backward compatible with your code using Play 2.3 so there is 
 Previously, Play added all the resources to the the `conf` directory in the distribution, but didn't add the `conf` directory to the classpath.  Now Play adds the `conf` directory to the classpath by default.
 
 This can be turned off by setting `PlayKeys.externalizeResources := false`, which will cause no `conf` directory to be created in the distribution, and it will not be on the classpath.  The contents of the applications `conf` directory will still be on the classpath by virtue of the fact that it's included in the applications jar file.
+
+
+## Miscellaneous
+
+### No more OrderedExecutionContext
+
+The mysterious `OrderedExecutionContext` had been retained in Play for several versions in order to support legacy applications. It was rarely used and has now been removed. If you still need the `OrderedExecutionContext` for some reason, you can create your own implementation based on the [Play 2.3 source](https://github.com/playframework/playframework/blob/2.3.x/framework/src/play/src/main/scala/play/core/j/OrderedExecutionContext.scala). If you haven't heard of this class, then there's nothing you need to do.

@@ -45,7 +45,7 @@ object Dependencies {
 
   val jpaDeps = Seq(
     "org.hibernate.javax.persistence" % "hibernate-jpa-2.1-api" % "1.0.0.Final",
-    "org.hibernate" % "hibernate-entitymanager" % "4.3.8.Final" % "test"
+    "org.hibernate" % "hibernate-entitymanager" % "4.3.9.Final" % "test"
   )
 
   val link = Seq(
@@ -217,7 +217,6 @@ object Dependencies {
       sbtDep("com.typesafe.sbt" % "sbt-twirl" % BuildInfo.sbtTwirlVersion),
       sbtDep("com.typesafe.sbt" % "sbt-play-enhancer" % "1.1.0-RC1"),
 
-      sbtDep("com.typesafe.sbteclipse" % "sbteclipse-plugin" % "3.0.0"),
       sbtDep("com.typesafe.sbt" % "sbt-native-packager" % BuildInfo.sbtNativePackagerVersion),
 
       sbtDep("com.typesafe.sbt" % "sbt-web" % "1.1.1"),
