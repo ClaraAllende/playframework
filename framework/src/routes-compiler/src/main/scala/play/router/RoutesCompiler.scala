@@ -1007,8 +1007,7 @@ object RoutesCompiler {
     }
      val paramPart = r.call.parameters.map { params =>
        params.map(paramFormat).mkString(", ")
-     }.map("(" + _ + ")")
-      .getOrElse("")
+     }.map("(" + _ + ")").getOrElse("")
     methodPart + paramPart
   }
 
@@ -1020,9 +1019,13 @@ object RoutesCompiler {
       case (r @ Route(_, _, _, _), i) =>
         val pattern = "PathPattern(List(StaticPart(Routes.prefix)" + { if (r.path.parts.isEmpty) "" else """,StaticPart(Routes.defaultPrefix),""" } + r.path.parts.map(_.toString).mkString(",") + "))"
         val fakeCall = controllerMethodCall(r, p => s"fakeValue[${p.typeName}]")
-        val handlerDef = """HandlerDef(this.getClass.getClassLoader, """" + routerPackage + """", """" + r.call.packageName + "." + r.call.controller + """", """" + r.call.method + """", """ + r.call.parameters.filterNot(_.isEmpty).map { params =>
+        val params = r.call.parameters.filterNot(_.isEmpty).map { params =>
           params.map("classOf[" + _.typeName + "]")
-        }.map("(" + _ + ")").getOrElse("Nil") + ""","""" + r.verb + """", """ + "\"\"\"" + r.comments.map(_.comment).mkString("\n") + "\"\"\", Routes.prefix + \"\"\"" + r.path + "\"\"\")"
+        }
+        if (params.size < 22)
+          params.mkString(", ").map("(" + _ + ")")
+        else params.map("Seq(" + _ + ")")
+        val handlerDef = """HandlerDef(this.getClass.getClassLoader, """" + routerPackage + """", """" + r.call.packageName + "." + r.call.controller + """", """" + r.call.method + """", """ + params.getOrElse("Nil") + ""","""" + r.verb + """", """ + "\"\"\"" + r.comments.map(_.comment).mkString("\n") + "\"\"\", Routes.prefix + \"\"\"" + r.path + "\"\"\")"
         s"""
            |${markLines(r)}
            |private[this] lazy val ${routeIdent(r, i)} = Route("${r.verb.value}", ${pattern})
