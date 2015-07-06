@@ -1089,8 +1089,8 @@ object RoutesCompiler {
           }
         }.map("(" + _ + ")").getOrElse("")
         val localNames = r.call.parameters.filterNot(_.isEmpty).map { params =>
-          params.map(x => safeKeyword(x.name) + ": " + x.typeName).mkString(",")
-        }.map("case List(" + _ + ") =>")
+          params.map(x => "(" + safeKeyword(x.name) + ": " + x.typeName + ")").mkString(":: ")
+        }.map("case " + _ + " :: Nil =>")
           .getOrElse("")
         val call = controllerMethodCall(r, x => safeKeyword(x.name))
         s"""
