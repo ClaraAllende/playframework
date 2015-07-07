@@ -1092,7 +1092,7 @@ object RoutesCompiler {
         val tupleNames =  r.call.parameters.filterNot(_.isEmpty).map { params =>
           params.map(x => safeKeyword(x.name)).mkString(", ")}.map("(" + _ + ") =>").getOrElse("")
 
-        val listNames = r.call.parameters.filterNot(_.isEmpty).map { params =>
+        val listNames =  r.call.parameters.filterNot(_.isEmpty).map { params =>
           params.map(x => "(" + safeKeyword(x.name) + ": " + x.typeName + ")").mkString(":: ")
         }.map("case " + _ + " :: Nil =>").getOrElse("")
 
