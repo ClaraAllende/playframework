@@ -1005,9 +1005,9 @@ object RoutesCompiler {
     } else {
       r.call.packageName + "." + r.call.controller + "." + r.call.method
     }
-     val paramPart = r.call.parameters.map { params =>
-       params.map(paramFormat).mkString(", ")
-     }.map("(" + _ + ")").getOrElse("")
+    val paramPart = r.call.parameters.map { params =>
+      params.map(paramFormat).mkString(", ")
+    }.map("(" + _ + ")").getOrElse("")
     methodPart + paramPart
   }
 
@@ -1089,10 +1089,11 @@ object RoutesCompiler {
           if (ps.size < 22) ps.mkString(", ") else ps
         }.map("(" + _ + ")").getOrElse("")
 
-        val tupleNames =  r.call.parameters.filterNot(_.isEmpty).map { params =>
-          params.map(x => safeKeyword(x.name)).mkString(", ")}.map("(" + _ + ") =>").getOrElse("")
+        val tupleNames = r.call.parameters.filterNot(_.isEmpty).map { params =>
+          params.map(x => safeKeyword(x.name)).mkString(", ")
+        }.map("(" + _ + ") =>").getOrElse("")
 
-        val listNames =  r.call.parameters.filterNot(_.isEmpty).map { params =>
+        val listNames = r.call.parameters.filterNot(_.isEmpty).map { params =>
           params.map(x => "(" + safeKeyword(x.name) + ": " + x.typeName + ")").mkString(":: ")
         }.map("case " + _ + " :: Nil =>").getOrElse("")
 

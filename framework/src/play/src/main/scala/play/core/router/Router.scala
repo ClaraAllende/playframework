@@ -323,7 +323,7 @@ object Router {
       play.api.Play.maybeApplication.map(_.global.onBadRequest(request, error)).getOrElse(play.api.DefaultGlobal.onBadRequest(request, error))
     }
 
-    def call(generator : => Handler) = generator
+    def call(generator: => Handler) = generator
 
     def call[P](pa: Param[P])(generator: (P) => Handler): Handler = {
       pa.value.fold(badRequest, generator)
@@ -449,8 +449,8 @@ object Router {
         .fold(badRequest, { case (a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13, a14, a15, a16, a17, a18, a19, a20, a21) => generator(a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13, a14, a15, a16, a17, a18, a19, a20, a21) })
     }
 
-    def call[T](params: List[Param[_]])(generator: (Seq[_]) => Handler) : Handler =
-      (params.foldLeft[Either[String, Seq[_]]](Right(Seq[T]())){(seq, param) => seq.right.flatMap(s => param.value.right.map(s :+ _))}).fold(badRequest, generator)
+    def call[T](params: List[Param[_]])(generator: (Seq[_]) => Handler): Handler =
+      (params.foldLeft[Either[String, Seq[_]]](Right(Seq[T]())) { (seq, param) => seq.right.flatMap(s => param.value.right.map(s :+ _)) }).fold(badRequest, generator)
 
     def handlerFor(request: RequestHeader): Option[Handler] = {
       routes.lift(request)
