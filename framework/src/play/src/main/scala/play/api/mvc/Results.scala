@@ -5,6 +5,8 @@ package play.api.mvc
 
 import java.nio.file.{ Files, Path }
 
+import org.joda.time.{ DateTime, DateTimeZone }
+import org.joda.time.format.{ DateTimeFormat, DateTimeFormatter }
 import play.api.i18n.{ MessagesApi, Lang }
 import play.api.libs.iteratee._
 import play.api.http._
@@ -38,6 +40,12 @@ final class ResponseHeader(val status: Int, _headers: Map[String, String] = Map.
   }
 }
 object ResponseHeader {
+  val basicDateFormatPattern = "EEE, dd MMM yyyy HH:mm:ss"
+  val httpDateFormat: DateTimeFormatter =
+    DateTimeFormat.forPattern(basicDateFormatPattern + " 'GMT'")
+      .withLocale(java.util.Locale.ENGLISH)
+      .withZone(DateTimeZone.UTC)
+
   def apply(status: Int, headers: Map[String, String] = Map.empty, reasonPhrase: Option[String] = None): ResponseHeader =
     new ResponseHeader(status, headers)
   def unapply(rh: ResponseHeader): Option[(Int, Map[String, String], Option[String])] =
@@ -104,6 +112,17 @@ case class Result(header: ResponseHeader, body: Enumerator[Array[Byte]],
   }
 
   /**
+   * Add a header with a DateTime formatted using the default http date format
+   * @param headers
+   * @return
+   */
+  def withDateHeaders(headers: (String, DateTime)*): Result = {
+    copy(header = header.copy(headers = header.headers ++ headers.map {
+      case (name, dateTime) => (name, ResponseHeader.httpDateFormat.print(dateTime.getMillis))
+    }))
+  }
+
+  /**
    * Adds cookies to this result. If the result already contains
    * cookies then the new cookies will be merged with the old cookies.
    *
@@ -117,7 +136,7 @@ case class Result(header: ResponseHeader, body: Enumerator[Array[Byte]],
    */
   def withCookies(cookies: Cookie*): Result = {
     if (cookies.isEmpty) this else {
-      withHeaders(SET_COOKIE -> Cookies.merge(header.headers.get(SET_COOKIE).getOrElse(""), cookies))
+      withHeaders(SET_COOKIE -> Cookies.mergeSetCookieHeader(header.headers.get(SET_COOKIE).getOrElse(""), cookies))
     }
   }
 
@@ -133,7 +152,7 @@ case class Result(header: ResponseHeader, body: Enumerator[Array[Byte]],
    * @return the new result
    */
   def discardingCookies(cookies: DiscardingCookie*): Result = {
-    withHeaders(SET_COOKIE -> Cookies.merge(header.headers.get(SET_COOKIE).getOrElse(""), cookies.map(_.toCookie)))
+    withHeaders(SET_COOKIE -> Cookies.mergeSetCookieHeader(header.headers.get(SET_COOKIE).getOrElse(""), cookies.map(_.toCookie)))
   }
 
   /**
@@ -225,7 +244,7 @@ case class Result(header: ResponseHeader, body: Enumerator[Array[Byte]],
    * @return The session carried by this result. Reads the request’s session if this result does not modify the session.
    */
   def session(implicit request: RequestHeader): Session =
-    Cookies(header.headers.get(SET_COOKIE)).get(Session.COOKIE_NAME) match {
+    Cookies.fromCookieHeader(header.headers.get(SET_COOKIE)).get(Session.COOKIE_NAME) match {
       case Some(cookie) => Session.decodeFromCookie(Some(cookie))
       case None => request.session
     }

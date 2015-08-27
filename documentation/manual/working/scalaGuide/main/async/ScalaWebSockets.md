@@ -1,7 +1,7 @@
 <!--- Copyright (C) 2009-2015 Typesafe Inc. <http://www.typesafe.com> -->
 # WebSockets
 
-[WebSockets](http://en.wikipedia.org/wiki/WebSocket) are sockets that can be used from a web browser based on a protocol that allows two way full duplex communication.  The client can send messages and the server can receive messages at any time, as long as there is an active WebSocket connection between the server and the client.
+[WebSockets](https://en.wikipedia.org/wiki/WebSocket) are sockets that can be used from a web browser based on a protocol that allows two way full duplex communication.  The client can send messages and the server can receive messages at any time, as long as there is an active WebSocket connection between the server and the client.
 
 Modern HTML5 compliant web browsers natively support WebSockets via a JavaScript WebSocket API.  However WebSockets are not limited in just being used by WebBrowsers, there are many WebSocket client libraries available, allowing for example servers to talk to each other, and also native mobile apps to use WebSockets.  Using WebSockets in these contexts has the advantage of being able to reuse the existing TCP port that a Play server uses.
 
@@ -9,7 +9,7 @@ Modern HTML5 compliant web browsers natively support WebSockets via a JavaScript
 
 Until now, we were using `Action` instances to handle standard HTTP requests and send back standard HTTP responses. WebSockets are a totally different beast and can’t be handled via standard `Action`.
 
-Play provides two different built in mechanisms for handling WebSockets.  The first is using actors, the second is using iteratees.  Both of these mechanisms can be accessed using the builders provided on [WebSocket](api/scala/index.html#play.api.mvc.WebSocket$).
+Play provides two different built in mechanisms for handling WebSockets.  The first is using actors, the second is using iteratees.  Both of these mechanisms can be accessed using the builders provided on [WebSocket](api/scala/play/api/mvc/WebSocket$.html).
 
 ## Handling WebSockets with actors
 
@@ -80,12 +80,12 @@ When constructing a `WebSocket` this way, we must return both `in` and `out` cha
 
 It this example we are creating a simple iteratee that prints each message to console. To send messages, we create a simple dummy enumerator that will send a single **Hello!** message.
 
-> **Tip:** You can test WebSockets on <http://websocket.org/echo.html>. Just set the location to `ws://localhost:9000`.
+> **Tip:** You can test WebSockets on <https://www.websocket.org/echo.html>. Just set the location to `ws://localhost:9000`.
 
 Let’s write another example that discards the input data and closes the socket just after sending the **Hello!** message:
 
 @[iteratee2](code/ScalaWebSockets.scala)
 
-Here is another example in which the input data is logged to standard out and broadcast by to the client utilizing 'Concurrent.broadcast'.
+Here is another example in which the input data is logged to standard out and broadcast to the client utilizing `Concurrent.broadcast`.
 
 @[iteratee3](code/ScalaWebSockets.scala)

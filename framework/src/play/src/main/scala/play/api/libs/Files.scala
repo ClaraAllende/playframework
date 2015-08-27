@@ -4,13 +4,70 @@
 package play.api.libs
 
 import java.io._
-import play.utils.PlayIO
-import scala.io.Codec
+import java.nio.file.{ FileAlreadyExistsException, StandardCopyOption, SimpleFileVisitor, Path, FileVisitResult }
+import java.nio.file.attribute.BasicFileAttributes
+
+import javax.inject.{ Inject, Singleton };
+
+import play.api.{ Application, Play };
+import play.api.inject.ApplicationLifecycle;
+import java.nio.file.{ Files => JFiles }
+
+import scala.concurrent.Future
 
 /**
  * FileSystem utilities.
  */
 object Files {
+
+  /**
+   * Logic for creating a temporary file. Users should try to clean up the
+   * file themselves, but this TemporaryFileCreator implementation may also
+   * try to clean up any leaked files, e.g. when the Application or JVM stops.
+   */
+  trait TemporaryFileCreator {
+    def create(prefix: String, suffix: String): File
+  }
+
+  /**
+   * Creates temporary folders inside a single temporary folder. The folder
+   * is deleted when the application stops.
+   */
+  @Singleton
+  class DefaultTemporaryFileCreator @Inject() (applicationLifecycle: ApplicationLifecycle) extends TemporaryFileCreator {
+    private lazy val playTempFolder = JFiles.createTempDirectory("playtemp")
+
+    /**
+     * Application stop hook which deletes the temporary folder recursively (including subfolders).
+     */
+    applicationLifecycle.addStopHook { () =>
+      Future.successful(JFiles.walkFileTree(playTempFolder, new SimpleFileVisitor[Path] {
+        override def visitFile(file: Path, attrs: BasicFileAttributes) = {
+          JFiles.deleteIfExists(file)
+          FileVisitResult.CONTINUE
+        }
+        override def postVisitDirectory(dir: Path, exc: IOException) = {
+          JFiles.deleteIfExists(dir)
+          FileVisitResult.CONTINUE
+        }
+      }))
+    }
+
+    def create(prefix: String, suffix: String): File = {
+      JFiles.createTempFile(playTempFolder, prefix, suffix).toFile
+    }
+  }
+
+  /**
+   * Creates temporary folders using the default JRE method. Files
+   * created by this method will not be cleaned up with the application
+   * or JVM stops.
+   */
+  object SingletonTemporaryFileCreator extends TemporaryFileCreator {
+    def create(prefix: String, suffix: String): File = {
+      JFiles.createTempFile(prefix, suffix).toFile
+    }
+  }
 
   /**
    * A temporary file hold a reference to a real file, and will delete
@@ -22,20 +79,29 @@ object Files {
      * Clean this temporary file now.
      */
     def clean(): Boolean = {
-      file.delete()
+      JFiles.deleteIfExists(file.toPath)
     }
 
     /**
      * Move the file.
      */
-    def moveTo(to: File, replace: Boolean = false) {
-      Files.Deprecated.moveFile(file, to, replace = replace)
+    def moveTo(to: File, replace: Boolean = false): File = {
+      try {
+        if (replace)
+          JFiles.move(file.toPath, to.toPath, StandardCopyOption.REPLACE_EXISTING)
+        else
+          JFiles.move(file.toPath, to.toPath)
+      } catch {
+        case ex: FileAlreadyExistsException => to
+      }
+
+      to
     }
 
     /**
      * Delete this file on garbage collection.
      */
-    override def finalize {
+    override def finalize() {
       clean()
     }
 
@@ -45,6 +111,18 @@ object Files {
    * Utilities to manage temporary files.
    */
   object TemporaryFile {
+
+    /**
+     * Cache the current Application's TemporaryFileCreator
+     */
+    private val creatorCache = Application.instanceCache[DefaultTemporaryFileCreator]
+
+    /**
+     * Get the current TemporaryFileCreator - either the injected
+     * instance or the SingletonTemporaryFileCreator if no application
+     * is currently running.
+     */
+    private def currentCreator: TemporaryFileCreator = Play.maybeApplication.fold[TemporaryFileCreator](SingletonTemporaryFileCreator)(creatorCache)
 
     /**
      * Create a new temporary file.
@@ -59,128 +137,8 @@ object Files {
      * @return A temporary file instance.
      */
     def apply(prefix: String = "", suffix: String = ""): TemporaryFile = {
-      new TemporaryFile(File.createTempFile(prefix, suffix))
+      TemporaryFile(currentCreator.create(prefix, suffix))
     }
 
   }
-
-  /**
-   * Copy a file.
-   */
-  @deprecated("Use Java 7 Files API instead", "2.3")
-  def copyFile(from: File, to: File, replaceExisting: Boolean = true): File = {
-    if (replaceExisting || !to.exists()) {
-      val in = new FileInputStream(from).getChannel
-      try {
-        val out = new FileOutputStream(to).getChannel
-        try {
-          out.transferFrom(in, 0, in.size())
-        } finally {
-          PlayIO.closeQuietly(out)
-        }
-      } finally {
-        PlayIO.closeQuietly(in)
-      }
-    }
-
-    to
-  }
-
-  /**
-   * Rename a file.
-   */
-  @deprecated("Use Java 7 Files API instead", "2.3")
-  def moveFile(from: File, to: File, replace: Boolean = true): File = {
-    if (to.exists() && replace) {
-      to.delete()
-    }
-
-    if (!to.exists()) {
-      if (!from.renameTo(to)) {
-        copyFile(from, to)
-        from.delete()
-      }
-    }
-
-    to
-  }
-
-  /**
-   * Reads a file’s contents into a String.
-   *
-   * @param path the file to read.
-   * @return the file contents
-   */
-  @deprecated("Use Java 7 Files API instead", "2.3")
-  def readFile(path: File): String = PlayIO.readFileAsString(path)(Codec.UTF8)
-
-  /**
-   * Write a file’s contents as a `String`.
-   *
-   * @param path the file to write to
-   * @param content the contents to write
-   */
-  @deprecated("Use Java 7 Files API instead", "2.3")
-  def writeFile(path: File, content: String): Unit = {
-    path.getParentFile.mkdirs()
-    val out = new FileOutputStream(path)
-    try {
-      val writer = new OutputStreamWriter(out, Codec.UTF8.name)
-      try {
-        writer.write(content)
-      } finally PlayIO.closeQuietly(writer)
-    } finally PlayIO.closeQuietly(out)
-  }
-
-  /**
-   * Creates a directory.
-   *
-   * @param path the directory to create
-   */
-  @deprecated("Use Java 7 Files API instead", "2.3")
-  def createDirectory(path: File): File = {
-    path.mkdirs()
-    path
-  }
-
-  /**
-   * Writes a file’s content as String, only touching the file if the actual file content is different.
-   *
-   * @param path the file to write to
-   * @param content the contents to write
-   */
-  @deprecated("Use Java 7 Files API instead", "2.3")
-  def writeFileIfChanged(path: File, content: String): Unit = {
-    if (content != Option(path).filter(_.exists).map(readFile(_)).getOrElse("")) {
-      writeFile(path, content)
-    }
-  }
-
-  /**
-   * Workaround to suppress deprecation warnings within the Play build.
-   * Based on https://issues.scala-lang.org/browse/SI-7934
-   */
-  @deprecated("", "")
-  private[play] class Deprecated {
-    def copyFile(from: File, to: File, replaceExisting: Boolean = true): File =
-      Files.copyFile(from, to, replaceExisting)
-
-    def moveFile(from: File, to: File, replace: Boolean = true): File =
-      Files.moveFile(from, to, replace)
-
-    def readFile(path: File): String =
-      Files.readFile(path)
-
-    def writeFile(path: File, content: String): Unit =
-      Files.writeFile(path, content)
-
-    def createDirectory(path: File): File =
-      Files.createDirectory(path)
-
-    def writeFileIfChanged(path: File, content: String): Unit =
-      Files.writeFileIfChanged(path, content)
-  }
-
-  private[play] object Deprecated extends Deprecated
-
 }

@@ -1,13 +1,9 @@
 <!--- Copyright (C) 2009-2015 Typesafe Inc. <http://www.typesafe.com> -->
 # Deploying to CloudFoundry / AppFog
 
-## CloudFoundry vs. AppFog
-
-Deploying to [AppFog](https://www.appfog.com/) can be accomplished by following the [Cloud Foundry](http://cloudfoundry.com) instructions below except run `af` instead of `vmc`. Also, with AppFog you need to follow an [extra step of adding an extra jar to the deployment zip file](https://docs.appfog.com/languages/java/play).
-
 ## Prerequisites
 
-Sign up for a free [Cloud Foundry](http://cloudfoundry.com) account and install or update the Cloud Foundry command line tool, VMC, to the latest version (0.3.18 or higher) by using the following command:
+Sign up for a free [Cloud Foundry](https://pivotal.io/platform-as-a-service/pivotal-cloud-foundry) account and install or update the Cloud Foundry command line tool, VMC, to the latest version (0.3.18 or higher) by using the following command:
 
 ```bash
 gem install vmc
@@ -66,7 +62,7 @@ As always, Cloud Foundry provides all of your service connection information to 
 db.default.driver=${?cloud.services.tasks-db.connection.driver}
 db.default.url=${?cloud.services.tasks-db.connection.url}
 db.default.password=${?cloud.services.tasks-db.connection.password}
-db.default.user=${?cloud.services.tasks-db.connection.username}
+db.default.username=${?cloud.services.tasks-db.connection.username}
 ```
 
 This information is available for all types of services, including NoSQL and messaging services. Also, if there is only a single service of a type (e.g. postgresql), you can refer to that service only by type instead of specifically by name, as exemplified below:
@@ -75,7 +71,7 @@ This information is available for all types of services, including NoSQL and mes
 db.default.driver=${?cloud.services.postgresql.connection.driver}
 db.default.url=${?cloud.services.postgresql.connection.url}
 db.default.password=${?cloud.services.postgresql.connection.password}
-db.default.user=${?cloud.services.postgresql.connection.username}
+db.default.username=${?cloud.services.postgresql.connection.username}
 ```
 We recommend keeping these properties in a separate file (for example `cloud.conf`) and then including them only when building a distribution for Cloud Foundry. You can specify an alternative config file to `play dist` by using `-Dconfig.file`.
 

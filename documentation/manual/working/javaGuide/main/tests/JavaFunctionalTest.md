@@ -18,9 +18,13 @@ To provide an environment for tests, Play provides a [`FakeApplication`](api/jav
 
 @[test-fakeapp](code/javaguide/tests/FakeApplicationTest.java)
 
-If you're using Guice for [[dependency injection|JavaDependencyInjection]] then an `Application` for testing can be [[built directly|JavaTestingWithGuice]], instead of using FakeApplication.
+## Injecting tests
 
-## Testing with a fake application
+If you're using Guice for [[dependency injection|JavaDependencyInjection]] then an `Application` for testing can be [[built directly|JavaTestingWithGuice]], instead of using FakeApplication. You can also inject any members of a test class that you might need. It's generally best practice to inject members only in functional tests and to manually create instances in unit tests.
+
+@[test-injection](code/javaguide/tests/InjectionTest.java)
+
+## Testing with an application
 
 To run tests with an `Application`, you can do the following:
 
@@ -52,7 +56,7 @@ Just as there exists a `WithApplication` class, there is also a [`WithServer`](a
 
 ## Testing with a browser
 
-If you want to test your application from with a Web browser, you can use [Selenium WebDriver](http://code.google.com/p/selenium/?redir=1). Play will start the WebDriver for you, and wrap it in the convenient API provided by [FluentLenium](https://github.com/FluentLenium/FluentLenium).
+If you want to test your application from with a Web browser, you can use [Selenium WebDriver](https://github.com/seleniumhq/selenium). Play will start the WebDriver for you, and wrap it in the convenient API provided by [FluentLenium](https://github.com/FluentLenium/FluentLenium).
 
 @[test-browser](code/javaguide/tests/FunctionalTest.java)
 

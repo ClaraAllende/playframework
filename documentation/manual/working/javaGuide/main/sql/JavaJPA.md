@@ -64,7 +64,7 @@ public static Result index() {
 }
 ```
 
-If your action perfoms only queries, you can set the `readOnly` attribute to `true`:
+If your action runs only queries, you can set the `readOnly` attribute to `true`:
 
 ```
 @Transactional(readOnly=true)
@@ -82,3 +82,7 @@ public static Company findById(Long id) {
   return JPA.em().find(Company.class, id);
 }
 ```
+
+## Enabling Play database evolutions
+
+Read [[Evolutions]] to find out what Play database evolutions are useful for, and follow the setup instructions for using it.

@@ -9,10 +9,13 @@ import java.time.{
   LocalDate,
   LocalDateTime,
   ZoneId,
+  ZoneOffset,
   ZonedDateTime
 }
 import java.time.format.{ DateTimeFormatter, DateTimeParseException }
 import java.time.temporal.UnsupportedTemporalTypeException
+
+import play.api.libs.json.jackson.JacksonJson
 
 import scala.annotation.implicitNotFound
 import scala.collection._
@@ -139,9 +142,47 @@ object Reads extends ConstraintReads with PathReads with DefaultReads {
 }
 
 /**
+ * Low priority reads.
+ *
+ * This exists as a compiler performance optimisation, so that the compiler doesn't have to rule them out when
+ * DefaultReads provides a simple match.
+ *
+ * See https://github.com/playframework/playframework/issues/4313 for more details.
+ */
+trait LowPriorityDefaultReads {
+
+  /**
+   * Generic deserializer for collections types.
+   */
+  implicit def traversableReads[F[_], A](implicit bf: generic.CanBuildFrom[F[_], A, F[A]], ra: Reads[A]) = new Reads[F[A]] {
+    def reads(json: JsValue) = json match {
+      case JsArray(ts) =>
+
+        type Errors = Seq[(JsPath, Seq[ValidationError])]
+        def locate(e: Errors, idx: Int) = e.map { case (p, valerr) => (JsPath(idx)) ++ p -> valerr }
+
+        ts.iterator.zipWithIndex.foldLeft(Right(Vector.empty): Either[Errors, Vector[A]]) {
+          case (acc, (elt, idx)) => (acc, fromJson[A](elt)(ra)) match {
+            case (Right(vs), JsSuccess(v, _)) => Right(vs :+ v)
+            case (Right(_), JsError(e)) => Left(locate(e, idx))
+            case (Left(e), _: JsSuccess[_]) => Left(e)
+            case (Left(e1), JsError(e2)) => Left(e1 ++ locate(e2, idx))
+          }
+        }.fold(JsError.apply, { res =>
+          val builder = bf()
+          builder.sizeHint(res)
+          builder ++= res
+          JsSuccess(builder.result())
+        })
+      case _ => JsError(Seq(JsPath() -> Seq(ValidationError("error.expected.jsarray"))))
+    }
+  }
+}
+
+/**
  * Default deserializer type classes.
  */
-trait DefaultReads {
+trait DefaultReads extends LowPriorityDefaultReads {
   import scala.language.implicitConversions
 
   /**
@@ -274,7 +315,6 @@ trait DefaultReads {
     df.setLenient(false)
     try { Some(df.parse(input)) } catch {
       case x: java.text.ParseException =>
-        println(s"=> $pattern -> ${x.getMessage}")
         None
     }
   }
@@ -335,9 +375,9 @@ trait DefaultReads {
     implicit def InstantPatternParser(pattern: String): TemporalParser[Instant] = new TemporalParser[Instant] {
       def parse(input: String): Option[Instant] = try {
         val time = LocalDateTime.parse(
-          input, DateTimeFormatter.ofPattern(pattern))
+          input, DateTimeFormatter.ofPattern(pattern)).atZone(ZoneId.of("Z"))
 
-        Some(Instant parse s"${time.toString}Z")
+        Some(time.toInstant)
       } catch {
         case _: DateTimeParseException => None
         case _: UnsupportedTemporalTypeException => None
@@ -347,8 +387,9 @@ trait DefaultReads {
     /** Instance of instant parser based on formatter. */
     implicit def InstantFormatterParser(formatter: DateTimeFormatter): TemporalParser[Instant] = new TemporalParser[Instant] {
       def parse(input: String): Option[Instant] = try {
-        val time = LocalDateTime.parse(input, formatter)
-        Some(Instant parse s"${time.toString}Z")
+        val time = LocalDateTime.parse(input, formatter).atZone(ZoneId.of("Z"))
+        
+        Some(time.toInstant)
       } catch {
         case _: DateTimeParseException => None
         case _: UnsupportedTemporalTypeException => None
@@ -411,7 +452,6 @@ trait DefaultReads {
    * }}}
    */
   def localDateTimeReads[T](parsing: T, corrector: String => String = identity)(implicit p: T => TemporalParser[LocalDateTime]): Reads[LocalDateTime] = new Reads[LocalDateTime] {
-
     def reads(json: JsValue): JsResult[LocalDateTime] = json match {
       case JsNumber(d) => JsSuccess(epoch(d.toLong))
       case JsString(s) => p(parsing).parse(corrector(s)) match {
@@ -455,7 +495,6 @@ trait DefaultReads {
    * }}}
    */
   def zonedDateTimeReads[T](parsing: T, corrector: String => String = identity)(implicit p: T => TemporalParser[ZonedDateTime]): Reads[ZonedDateTime] = new Reads[ZonedDateTime] {
-
     def reads(json: JsValue): JsResult[ZonedDateTime] = json match {
       case JsNumber(d) => JsSuccess(epoch(d.toLong))
       case JsString(s) => p(parsing).parse(corrector(s)) match {
@@ -825,32 +864,6 @@ trait DefaultReads {
         }.fold(JsError.apply, res => JsSuccess(res.toMap))
       }
       case _ => JsError(Seq(JsPath() -> Seq(ValidationError("error.expected.jsobject"))))
-    }
-  }
-
-  /**
-   * Generic deserializer for collections types.
-   */
-  implicit def traversableReads[F[_], A](implicit bf: generic.CanBuildFrom[F[_], A, F[A]], ra: Reads[A]) = new Reads[F[A]] {
-    def reads(json: JsValue) = json match {
-      case JsArray(ts) =>
-
-        type Errors = Seq[(JsPath, Seq[ValidationError])]
-        def locate(e: Errors, idx: Int) = e.map { case (p, valerr) => (JsPath(idx)) ++ p -> valerr }
-
-        ts.zipWithIndex.foldLeft(Right(Vector.empty): Either[Errors, Vector[A]]) {
-          case (acc, (elt, idx)) => (acc, fromJson[A](elt)(ra)) match {
-            case (Right(vs), JsSuccess(v, _)) => Right(vs :+ v)
-            case (Right(_), JsError(e)) => Left(locate(e, idx))
-            case (Left(e), _: JsSuccess[_]) => Left(e)
-            case (Left(e1), JsError(e2)) => Left(e1 ++ locate(e2, idx))
-          }
-        }.fold(JsError.apply, { res =>
-          val builder = bf()
-          res.foreach(builder.+=)
-          JsSuccess(builder.result())
-        })
-      case _ => JsError(Seq(JsPath() -> Seq(ValidationError("error.expected.jsarray"))))
     }
   }
 

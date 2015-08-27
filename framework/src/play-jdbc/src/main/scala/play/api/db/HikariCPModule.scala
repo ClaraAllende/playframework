@@ -58,10 +58,9 @@ class HikariCPConnectionPool @Inject() (environment: Environment) extends Connec
       val datasource = new HikariDataSource(hikariConfig)
 
       // Bind in JNDI
-      dbConfig.jndiName.foreach { name =>
-        JNDI.initialContext.rebind(name, datasource)
-        val visibleUrl = datasource.getJdbcUrl
-        logger.info(s"""datasource [$visibleUrl] bound to JNDI as $name""")
+      dbConfig.jndiName.foreach { jndiName =>
+        JNDI.initialContext.rebind(jndiName, datasource)
+        logger.info(s"datasource [$name] bound to JNDI as $jndiName")
       }
 
       datasource
@@ -96,10 +95,7 @@ class HikariCPConfig(dbConfig: DatabaseConfig, configuration: PlayConfig) {
     val config = configuration.get[PlayConfig]("hikaricp")
 
     // Essentials configurations
-    config.getOptional[String]("dataSourceClassName") match {
-      case Some(className) => hikariConfig.setDataSourceClassName(className)
-      case None => Logger.debug("`dataSourceClassName` not present. Will use `url` instead.")
-    }
+    config.getOptional[String]("dataSourceClassName").foreach(hikariConfig.setDataSourceClassName)
 
     dbConfig.url.foreach(hikariConfig.setJdbcUrl)
     dbConfig.driver.foreach(hikariConfig.setDriverClassName)
@@ -135,6 +131,7 @@ class HikariCPConfig(dbConfig: DatabaseConfig, configuration: PlayConfig) {
     hikariConfig.setAllowPoolSuspension(config.get[Boolean]("allowPoolSuspension"))
     hikariConfig.setReadOnly(config.get[Boolean]("readOnly"))
     hikariConfig.setRegisterMbeans(config.get[Boolean]("registerMbeans"))
+    config.getOptional[String]("connectionInitSql").foreach(hikariConfig.setConnectionInitSql)
     config.getOptional[String]("catalog").foreach(hikariConfig.setCatalog)
     config.getOptional[String]("transactionIsolation").foreach(hikariConfig.setTransactionIsolation)
     hikariConfig.setValidationTimeout(config.get[FiniteDuration]("validationTimeout").toMillis)

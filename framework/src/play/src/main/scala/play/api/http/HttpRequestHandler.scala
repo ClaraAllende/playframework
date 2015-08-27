@@ -3,7 +3,6 @@
  */
 package play.api.http
 
-import java.util.regex.Pattern
 import javax.inject.{ Provider, Inject }
 
 import play.api.inject.{ BindingKey, Binding }

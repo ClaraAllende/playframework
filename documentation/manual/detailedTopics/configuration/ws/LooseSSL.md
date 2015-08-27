@@ -1,3 +1,4 @@
+<!--- Copyright (C) 2009-2015 Typesafe Inc. <http://www.typesafe.com> -->
 # Loose Options
 
 ## We understand
@@ -32,21 +33,21 @@ A networking auditing tool such as a [Wifi Pineapple](https://wifipineapple.com/
 
 ### Companies have been sued for inadequate security
 
-PCI compliance is not the only thing that companies have to worry about.  The FTC sued [Fandango and Credit Karma](http://www.ftc.gov/news-events/press-releases/2014/03/fandango-credit-karma-settle-ftc-charges-they-deceived-consumers) on charges that they failed to securely transmit information, including credit card information.
+PCI compliance is not the only thing that companies have to worry about.  The FTC sued [Fandango and Credit Karma](https://www.ftc.gov/news-events/press-releases/2014/03/fandango-credit-karma-settle-ftc-charges-they-deceived-consumers) on charges that they failed to securely transmit information, including credit card information.
 
 ### Correctly configured HTTPS clients are important
 
-Sensitive, company confidential information goes over web services.  A paper discussing insecurities in WS clients was titled [The Most Dangerous Code in the World: Validating SSL Certificates in Non-Browser Software](http://www.cs.utexas.edu/~shmat/shmat_ccs12.pdf), and lists poor default configuration and explicit disabling of security options as the primary reason for exposure.  The WS client has been configured as much as possible to be secure by default, and there are example configurations provided for your benefit.
+Sensitive, company confidential information goes over web services.  A paper discussing insecurities in WS clients was titled [The Most Dangerous Code in the World: Validating SSL Certificates in Non-Browser Software](https://www.cs.utexas.edu/~shmat/shmat_ccs12.pdf), and lists poor default configuration and explicit disabling of security options as the primary reason for exposure.  The WS client has been configured as much as possible to be secure by default, and there are example configurations provided for your benefit.
 
 ## Mitigation
 
 If you must turn on loose options, there are a couple of things you can do to minimize your exposure.
 
-**Custom WSClient**: You can create a [[custom WSClient|ScalaWS]] specifically for the server, using the [`DefaultWSConfigParser`](api/scala/index.html#play.api.libs.ws.DefaultWSConfigParser) together with `ConfigFactory.parseString`, and ensure it is never used outside that context.
+**Custom WSClient**: You can create a [[custom WSClient|ScalaWS]] specifically for the server, using the [`WSConfigParser`](api/scala/play/api/libs/ws/WSConfigParser.html) together with `ConfigFactory.parseString`, and ensure it is never used outside that context.
 
 **Environment Scoping**: You can define [environment variables in HOCON](https://github.com/typesafehub/config/blob/master/HOCON.md#substitution-fallback-to-environment-variables) to ensure that any loose options are not hardcoded in configuration files, and therefore cannot escape an development environment.
 
-**Runtime / Deployment Checks**: You can add code to your deployment scripts or program that checks that `ws.ssl.loose` options are not enabled in a production environment.  The runtime mode can be found in the [`Application.mode`](api/scala/index.html#play.api.Application) method.
+**Runtime / Deployment Checks**: You can add code to your deployment scripts or program that checks that `play.ws.ssl.loose` options are not enabled in a production environment.  The runtime mode can be found in the [`Application.mode`](api/scala/play/api/Application.html) method.
 
 ## Loose Options
 
@@ -69,7 +70,7 @@ If you've read the above and you still want to completely disable certificate ve
 play.ws.ssl.loose.acceptAnyCertificate=true
 ```
 
-With certificate verification completely disabled, you are vulnerable to attack from anyone on the network using a tool such as [mitmproxy](http://mitmproxy.org/).
+With certificate verification completely disabled, you are vulnerable to attack from anyone on the network using a tool such as [mitmproxy](https://mitmproxy.org/).
 
 ### Disabling Weak Ciphers Checking
 
@@ -89,7 +90,7 @@ If you want to disable hostname verification, you can set a loose flag:
 play.ws.ssl.loose.disableHostnameVerification=true
 ```
 
-With hostname verification disabled, a DNS proxy such as `dnschef` can [easily intercept communication](http://tersesystems.com/2014/03/31/testing-hostname-verification/).
+With hostname verification disabled, a DNS proxy such as `dnschef` can [easily intercept communication](https://tersesystems.com/2014/03/31/testing-hostname-verification/).
 
 ### Disabled Protocols
 
@@ -102,5 +103,3 @@ play.ws.ssl.loose.allowWeakProtocols=true
 ```
 
 SSLv2 and SSLv2Hello (there is no v1) are obsolete and usage in the field is [down to 25% on the public Internet](https://www.trustworthyinternet.org/ssl-pulse/).  SSLv3 is known to have [security issues](http://www.yaksman.org/~lweith/ssl.pdf) compared to TLS.  The only reason to turn this on is if you are connecting to a legacy server, but doing so does not make you vulnerable per se.
-
-> **Next**:  [[Testing SSL|TestingSSL]]

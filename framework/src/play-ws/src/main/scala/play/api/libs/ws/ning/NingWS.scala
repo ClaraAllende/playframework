@@ -107,7 +107,7 @@ case class NingWSRequest(client: NingWSClient,
 
   def withQueryString(parameters: (String, String)*): WSRequest =
     copy(queryString = parameters.foldLeft(this.queryString) {
-      case (m, (k, v)) => m + (k -> (v +: m.get(k).getOrElse(Nil)))
+      case (m, (k, v)) => m + (k -> (v +: m.getOrElse(k, Nil)))
     })
 
   def withFollowRedirects(follow: Boolean): WSRequest = copy(followRedirects = Some(follow))
@@ -236,7 +236,7 @@ case class NingWSRequest(client: NingWSClient,
     requestTimeout.foreach(builder.setRequestTimeout)
 
     // Set the body.
-    var possiblyModifiedHeaders = this.headers
+    val possiblyModifiedHeaders = this.headers
     val builderWithBody = body match {
       case EmptyBody => builder
       case FileBody(file) =>
@@ -244,30 +244,32 @@ case class NingWSRequest(client: NingWSClient,
         val bodyGenerator = new FileBodyGenerator(file)
         builder.setBody(bodyGenerator)
       case InMemoryBody(bytes) =>
-        // extract the content type and the charset
         val ct: String = contentType.getOrElse("text/plain")
-        val charset = Charset.forName(
-          Option(AsyncHttpProviderUtils.parseCharset(ct)).getOrElse {
-            // NingWSRequest modifies headers to include the charset, but this fails tests in Scala.
-            //val contentTypeList = Seq(ct + "; charset=utf-8")
-            //possiblyModifiedHeaders = this.headers.updated(HttpHeaders.Names.CONTENT_TYPE, contentTypeList)
-            "utf-8"
-          }
-        )
 
         try {
-          // Get the string body given the given charset...
-          val stringBody = new String(bytes, charset)
-          // The Ning signature calculator uses request.getFormParams() for calculation,
-          // so we have to parse it out and add it rather than using setBody.
           if (ct.contains(HttpHeaders.Values.APPLICATION_X_WWW_FORM_URLENCODED)) {
+            // extract the content type and the charset
+            val charset = Charset.forName(
+              Option(AsyncHttpProviderUtils.parseCharset(ct)).getOrElse {
+                // NingWSRequest modifies headers to include the charset, but this fails tests in Scala.
+                //val contentTypeList = Seq(ct + "; charset=utf-8")
+                //possiblyModifiedHeaders = this.headers.updated(HttpHeaders.Names.CONTENT_TYPE, contentTypeList)
+                "utf-8"
+              }
+            )
+
+            // Get the string body given the given charset...
+            val stringBody = new String(bytes, charset)
+            // The Ning signature calculator uses request.getFormParams() for calculation,
+            // so we have to parse it out and add it rather than using setBody.
+
             val params = for {
               (key, values) <- FormUrlEncodedParser.parse(stringBody).toSeq
               value <- values
             } yield new Param(key, value)
             builder.setFormParams(params.asJava)
           } else {
-            builder.setBody(stringBody)
+            builder.setBody(bytes)
           }
         } catch {
           case e: UnsupportedEncodingException =>
@@ -524,12 +526,12 @@ private class NingWSCookie(ahcCookie: AHCCookie) extends WSCookie {
   /**
    * The expiry date.
    */
-  def expires: Option[Long] = if (ahcCookie.getExpires == -1) None else Some(ahcCookie.getExpires)
+  def expires: Option[Long] = if (ahcCookie.getExpires <= -1) None else Some(ahcCookie.getExpires)
 
   /**
    * The maximum age.
    */
-  def maxAge: Option[Int] = if (ahcCookie.getMaxAge == -1) None else Some(ahcCookie.getMaxAge)
+  def maxAge: Option[Int] = if (ahcCookie.getMaxAge <= -1) None else Some(ahcCookie.getMaxAge)
 
   /**
    * If the cookie is secure.

@@ -1,6 +1,8 @@
 /*
  * Copyright (C) 2009-2015 Typesafe Inc. <http://www.typesafe.com>
  */
+
+import com.typesafe.play.sbt.enhancer.PlayEnhancer
 import sbt._
 import sbt.Keys._
 import play.Play.autoImport._
@@ -51,7 +53,8 @@ object ApplicationBuild extends Build {
         enabled.foldLeft[FileFilter](new ExactFilter("code")) { (filter, e) => filter || new ExactFilter("code-" + e) })
   }
 
-  lazy val main = Project("Play-Documentation", file(".")).enablePlugins(PlayDocsPlugin).settings(
+  lazy val main = Project("Play-Documentation", file("."))
+    .enablePlugins(PlayDocsPlugin).disablePlugins(PlayEnhancer).settings(
     resolvers += Resolver.sonatypeRepo("releases"), // TODO: Delete this eventually, just needed for lag between deploying to sonatype and getting on maven central
     version := PlayVersion.current,
     libraryDependencies ++= Seq(
@@ -59,6 +62,7 @@ object ApplicationBuild extends Build {
     ),
 
     PlayDocsKeys.docsJarFile := Some((packageBin in (playDocs, Compile)).value),
+    PlayDocsKeys.playDocsValidationConfig := PlayDocsValidation.ValidationConfig(downstreamWikiPages = Set("ScalaAnorm","PlaySlickMigrationGuide")),
 
     PlayDocsKeys.javaManualSourceDirectories := (baseDirectory.value / "manual" / "working" / "javaGuide" ** codeFilter).get,
     PlayDocsKeys.scalaManualSourceDirectories := (baseDirectory.value / "manual" / "working" / "scalaGuide" ** codeFilter).get,
@@ -69,7 +73,7 @@ object ApplicationBuild extends Build {
     // Don't include sbt files in the resources
     excludeFilter in (Test, unmanagedResources) := (excludeFilter in (Test, unmanagedResources)).value || "*.sbt",
 
-    crossScalaVersions := Seq("2.10.4", "2.11.5"),
+    crossScalaVersions := Seq("2.10.5", "2.11.6"),
     scalaVersion := PlayVersion.scalaVersion,
 
     fork in Test := true
@@ -82,6 +86,7 @@ object ApplicationBuild extends Build {
       playProject("Play-Cache") % "test",
       playProject("Play-Java-WS") % "test",
       playProject("Filters-Helpers") % "test",
+      playProject("Play-JDBC-Evolutions") % "test",
       playProject("Play-JDBC") % "test",
       playProject("Play-Java-JDBC") % "test"
   )

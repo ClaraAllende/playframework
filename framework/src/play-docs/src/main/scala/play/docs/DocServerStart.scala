@@ -22,7 +22,7 @@ class DocServerStart {
     forceTranslationReport: Callable[File], port: java.lang.Integer): ServerWithStop = {
 
     val application: Application = {
-      val environment = Environment(projectPath, this.getClass.getClassLoader, Mode.Dev)
+      val environment = Environment(projectPath, this.getClass.getClassLoader, Mode.Test)
       val context = ApplicationLoader.createContext(environment)
       val components = new BuiltInComponentsFromContext(context) {
         lazy val router = Router.empty
@@ -53,7 +53,7 @@ class DocServerStart {
     val config = ServerConfig(
       rootDir = projectPath,
       port = Some(port),
-      mode = Mode.Dev,
+      mode = Mode.Test,
       properties = System.getProperties
     )
     val serverProvider: ServerProvider = ServerProvider.fromConfiguration(getClass.getClassLoader, config.configuration)

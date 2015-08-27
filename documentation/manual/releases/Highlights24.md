@@ -27,7 +27,7 @@ In the Scala ecosystem, the approach to dependency injection is not generally ag
 
 Play's philosophy in providing a dependency injection solution is to be unopinionated in what approaches we allow, but to be opinionated to the approach that we document and provide out of the box.  For this reason, we have provided the following:
 
-* An implementation that uses [Guice](https://code.google.com/p/google-guice/) out of the box
+* An implementation that uses [Guice](https://github.com/google/guice) out of the box
 * An abstraction that allows other JSR 330 implementations to be plugged in
 * All Play components can be instantiated using plain constructors or factory methods
 * Traits that instantiate Play components that can be mixed together in a cake pattern like style to assist with compile time dependency injection
@@ -46,9 +46,9 @@ You can read about these new APIs here:
 
 ## Embedding Play
 
-It is now straight forward to embed a Play application.  Play 2.4 provides both APIs to start and stop a Play server, as well as routing DSLs for Java and Scala so that routes can be embedded directly in code.
+It is now straightforward to embed a Play application.  Play 2.4 provides both APIs to start and stop a Play server, as well as routing DSLs for Java and Scala so that routes can be embedded directly in code.
 
-In Java, see [[Embedding Play|JavaEmbeddingPlay]] as well as information about the [[Routing DSL|JavaRoutingDSL]].
+In Java, see [[Embedding Play|JavaEmbeddingPlay]] as well as information about the [[Routing DSL|JavaRoutingDsl]].
 
 In Scala, see [[Embedding Play|ScalaEmbeddingPlay]] as well as information about the [[String Interpolating Routing DSL|ScalaSirdRouter]].
 
@@ -107,13 +107,17 @@ New features in anorm include:
 
 ## Ebean
 
-Play's Ebean support has been extracted into a separate project with its own lifecycle, allowing ebean support to move at its own pace, not bound to Play.  The play-ebean project can be found [here](https://github.com/playframework/play-ebean).
+Play's Ebean support has been extracted into a separate project with its own lifecycle, allowing Ebean support to move at its own pace, not bound to Play.  The play-ebean project can be found [here](https://github.com/playframework/play-ebean).
 
 play-ebean now supports Ebean 4.x.
 
 ## HikariCP
 
-[HikariCP](http://brettwooldridge.github.io/HikariCP/) is now the default JDBC connection pool. It's properties can be directly configured using `.conf` files and you should rename the configuration properties to match what is expected by HikariCP.
+[HikariCP](http://brettwooldridge.github.io/HikariCP/) is now the default JDBC connection pool. Its properties can be directly configured using `.conf` files and you should rename the configuration properties to match what is expected by HikariCP.
+
+## WS
+
+WS now supports Server Name Indication (SNI) in HTTPS -- this solves a number of problems with HTTPS based CDNs such as Cloudflare which depend heavily on SNI.
 
 ## Experimental Features
 

@@ -7,6 +7,14 @@ When you use a relational database, you need a way to track and organize your da
 - When you deploy on a production server, you need to have a robust way to upgrade your database schema.
 - If you work on several machines, you need to keep all database schemas synchronized.
 
+## Enable evolutions
+
+Add `evolutions` into your dependencies list. For example, in `build.sbt`:
+
+```scala
+libraryDependencies += evolutions
+```
+
 ## Evolutions scripts
 
 Play tracks your database evolutions using several evolutions script. These scripts are written in plain old SQL and should be located in the `conf/evolutions/{database name}` directory of your application. If the evolutions apply to your default database, this path is `conf/evolutions/default`.
@@ -57,7 +65,7 @@ Evolutions can be configured both globally and per datasource.  For global confi
 
 * `enabled` - Whether evolutions are enabled.  If configured globally to be false, it disables the evolutions module altogether.  Defaults to true.
 * `autocommit` - Whether autocommit should be used.  If false, evolutions will be applied in a single transaction.  Defaults to true.
-* `useLocks` - Whether a locks table should be used.  This must be used if you have many Play nodes that may potentially run evolutions, but you want to ensure that only one does.  It will create a table called `play_evolutions_lock`, and use a `SELECT FOR UPDATE NOWAIT` to lock it.  This will only work for Postgres and Oracle, it will not work for other databases.  Defaults to false.
+* `useLocks` - Whether a locks table should be used.  This must be used if you have many Play nodes that may potentially run evolutions, but you want to ensure that only one does.  It will create a table called `play_evolutions_lock`, and use a `SELECT FOR UPDATE NOWAIT` or `SELECT FOR UPDATE` to lock it.  This will only work for Postgres, Oracle, and MySQL InnoDB. It will not work for other databases.  Defaults to false.
 * `autoApply` - Whether evolutions should be automatically applied.  In dev mode, this will cause both ups and downs evolutions to be automatically applied.  In prod mode, it will cause only ups evolutions to be automatically applied.  Defaults to false.
 * `autoApplyDowns` - Whether down evolutions should be automatically applied.  In prod mode, this will cause down evolutions to be automatically applied.  Has no effect in dev mode.  Defaults to false.
 

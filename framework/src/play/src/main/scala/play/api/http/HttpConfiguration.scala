@@ -7,6 +7,7 @@ import javax.inject.{ Singleton, Inject, Provider }
 
 import com.typesafe.config.ConfigMemorySize
 import play.api.{ PlayConfig, Application, Play, Configuration }
+import play.core.netty.utils.{ ServerCookieDecoder, ClientCookieEncoder, ClientCookieDecoder, ServerCookieEncoder }
 
 import scala.concurrent.duration.FiniteDuration
 
@@ -21,8 +22,36 @@ import scala.concurrent.duration.FiniteDuration
 case class HttpConfiguration(
   context: String = "/",
   parser: ParserConfiguration = ParserConfiguration(),
+  actionComposition: ActionCompositionConfiguration = ActionCompositionConfiguration(),
+  cookies: CookiesConfiguration = CookiesConfiguration(),
   session: SessionConfiguration = SessionConfiguration(),
   flash: FlashConfiguration = FlashConfiguration())
+
+/**
+ * The cookies configuration
+ *
+ * @param strict Whether strict cookie parsing should be used. If true, will cause the entire cookie header to be
+ *               discarded if a single cookie is found to be invalid.
+ */
+case class CookiesConfiguration(
+    strict: Boolean = true) {
+  def serverEncoder: ServerCookieEncoder = strict match {
+    case true => ServerCookieEncoder.STRICT
+    case false => ServerCookieEncoder.LAX
+  }
+  def clientEncoder: ClientCookieEncoder = strict match {
+    case true => ClientCookieEncoder.STRICT
+    case false => ClientCookieEncoder.LAX
+  }
+  def serverDecoder: ServerCookieDecoder = strict match {
+    case true => ServerCookieDecoder.STRICT
+    case false => ServerCookieDecoder.LAX
+  }
+  def clientDecoder: ClientCookieDecoder = strict match {
+    case true => ClientCookieDecoder.STRICT
+    case false => ClientCookieDecoder.LAX
+  }
+}
 
 /**
  * The session configuration
@@ -56,6 +85,14 @@ case class ParserConfiguration(
   maxMemoryBuffer: Int = 102400,
   maxDiskBuffer: Long = 10485760)
 
+/**
+ * Configuration for action composition.
+ *
+ * @param controllerAnnotationsFirst If annotations put on controllers should be executed before the ones put on actions.
+ */
+case class ActionCompositionConfiguration(
+  controllerAnnotationsFirst: Boolean = false)
+
 object HttpConfiguration {
 
   @Singleton
@@ -64,8 +101,7 @@ object HttpConfiguration {
   }
 
   def fromConfiguration(configuration: Configuration) = {
-    val config = PlayConfig(configuration
-    )
+    val config = PlayConfig(configuration)
     val context = {
       val ctx = config.getDeprecated[String]("play.http.context", "application.context")
       if (!ctx.startsWith("/")) {
@@ -80,6 +116,12 @@ object HttpConfiguration {
         maxMemoryBuffer = config.getDeprecated[ConfigMemorySize]("play.http.parser.maxMemoryBuffer", "parsers.text.maxLength")
           .toBytes.toInt,
         maxDiskBuffer = config.get[ConfigMemorySize]("play.http.parser.maxDiskBuffer").toBytes
+      ),
+      actionComposition = ActionCompositionConfiguration(
+        controllerAnnotationsFirst = config.get[Boolean]("play.http.actionComposition.controllerAnnotationsFirst")
+      ),
+      cookies = CookiesConfiguration(
+        strict = config.get[Boolean]("play.http.cookies.strict")
       ),
       session = SessionConfiguration(
         cookieName = config.getDeprecated[String]("play.http.session.cookieName", "session.cookieName"),
@@ -100,5 +142,5 @@ object HttpConfiguration {
   /**
    * Don't use this - only exists for transition from global state
    */
-  def current = Play.maybeApplication.fold(HttpConfiguration())(httpConfigurationCache)
+  private[play] def current = Play.maybeApplication.fold(HttpConfiguration())(httpConfigurationCache)
 }

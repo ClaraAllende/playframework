@@ -9,25 +9,31 @@ However, using a modern Java or Scala IDE provides cool productivity features li
 
 ### Setup sbteclipse
 
-Play requires sbteclipse 4.0.0 or newer.
+Play requires [sbteclipse](https://github.com/typesafehub/sbteclipse) 4.0.0 or newer.  Append the following to project/plugins.sbt:
 
-```
+```scala
 addSbtPlugin("com.typesafe.sbteclipse" % "sbteclipse-plugin" % "4.0.0")
+```
+
+You must `compile` your project before running the `eclipse` command. You can force compilation to happen when the `eclipse` command is run by adding the following setting to build.sbt:
+
+```scala
+// Compile the project before generating Eclipse files, so that generated .scala or .class files for views and routes are present
+EclipseKeys.preTasks := Seq(compile in Compile)
 ```
 
 If you have Scala sources in your project, you will need to install [Scala IDE](http://scala-ide.org/).
 
 If you do not want to install Scala IDE and have only Java sources in your project, then you can set the following:
 
-```
-EclipseKeys.projectFlavor := EclipseProjectFlavor.Java,                # Java project. Don't expect Scala IDE
-EclipseKeys.createSrc := ValueSet(ManagedClasses, ManagedResources),   # Use .class files instead of generated .scala files for views and routes 
-EclipseKeys.preTasks := Seq(compile in Compile)                        # Compile the project before generating Eclipse files, so that .class files for views and routes are present
+```scala
+EclipseKeys.projectFlavor := EclipseProjectFlavor.Java           // Java project. Don't expect Scala IDE
+EclipseKeys.createSrc := EclipseCreateSrc.ValueSet(EclipseCreateSrc.ManagedClasses, EclipseCreateSrc.ManagedResources)  // Use .class files instead of generated .scala files for views and routes 
 ```
 
 ### Generate configuration
 
-Play provides a command to simplify [Eclipse](http://eclipse.org/) configuration. To transform a Play application into a working Eclipse project, use the `eclipse` command:
+Play provides a command to simplify [Eclipse](https://eclipse.org/) configuration. To transform a Play application into a working Eclipse project, use the `eclipse` command:
 
 ```bash
 [my-first-app] $ eclipse
@@ -35,19 +41,19 @@ Play provides a command to simplify [Eclipse](http://eclipse.org/) configuration
 
 If you want to grab the available source jars (this will take longer and it's possible a few sources might be missing):
 
-```
+```bash
 [my-first-app] $ eclipse with-source=true
 ```
 
 > Note if you are using sub-projects with aggregate, you would need to set `skipParents` appropriately in `build.sbt`:
 
-```
+```scala
 EclipseKeys.skipParents in ThisBuild := false
 ```
 
 or from the play console, type:
 
-``` 
+```bash
 [my-first-app] $ eclipse skip-parents=false
 ```
 
@@ -67,7 +73,7 @@ The generated configuration files contain absolute references to your framework 
 
 ## IntelliJ
 
-[Intellij IDEA](http://www.jetbrains.com/idea/) lets you quickly create a Play application without using a command prompt. You don't need to configure anything outside of the IDE, the SBT build tool takes care of downloading appropriate libraries, resolving dependencies and building the project.
+[Intellij IDEA](https://www.jetbrains.com/idea/) lets you quickly create a Play application without using a command prompt. You don't need to configure anything outside of the IDE, the SBT build tool takes care of downloading appropriate libraries, resolving dependencies and building the project.
 
 Before you start creating a Play application in IntelliJ IDEA, make sure that the latest [Scala Plugin](http://www.jetbrains.com/idea/features/scala.html) is installed and enabled in IntelliJ IDEA. Even if you don't develop in Scala, it will help with the template engine and also resolving dependencies.
 
@@ -77,6 +83,8 @@ To create a Play application:
 2. Enter your project's information and click ***Finish***.
 
 IntelliJ IDEA creates an empty application using SBT.
+
+Currently, for Play 2.4.x, instead of using the IntelliJ wizard to create a new project, we suggest that you create it using Activator and then Import it to IntelliJ.
 
 You can also import an existing Play project.
 
@@ -91,14 +99,18 @@ Check the project's structure, make sure all necessary dependencies are download
 
 You can run the created application and view the result in the default browser `http://localhost:9000`. To run a Play application:
 
-1. In the project tree, right-click the application.
-2. From the list in the context menu, select ***Run Play2 App***.
+1. Create a new Run Configuration -- From the main menu, select Run -> Edit Configurations
+2. Click on the + to add a new configuration
+3. From the list of configurations, choose "SBT Task"
+4. In the "tasks" input box, simply put "run"
+5. Apply changes and select OK.
+6. Now you can choose "Run" from the main Run menu and run your application
 
 You can easily start a debugger session for a Play application using default Run/Debug Configuration settings.
 
 For more detailed information, see the Play Framework 2.x tutorial at the following URL:
 
-<http://confluence.jetbrains.com/display/IntelliJIDEA/Play+Framework+2.0> 
+<https://confluence.jetbrains.com/display/IntelliJIDEA/Play+Framework+2.0> 
 
 ### Navigate from an error page to the source code
 
@@ -112,7 +124,7 @@ Just install the Remote Call plugin and run your app with the following options:
 
 ### Generate Configuration
 
-Play does not have native Netbeans project generation support at this time, but there is a Scala plugin for NetBeans which can help with both Scala language and SBT:
+Play does not have native [Netbeans](https://netbeans.org/) project generation support at this time, but there is a Scala plugin for NetBeans which can help with both Scala language and SBT:
 
 <https://github.com/dcaoyuan/nbscala>
 
@@ -124,25 +136,25 @@ There is also a SBT plugin to create Netbeans project definition:
 
 ### Install ENSIME
 
-Follow the installation instructions at <https://github.com/ensime/ensime-emacs>
+Follow the installation instructions at <https://github.com/ensime/ensime-emacs>.
 
 ### Generate configuration
 
 Edit your project/plugins.sbt file, and add the following line (you should first check <https://github.com/ensime/ensime-sbt> for the latest version of the plugin):
 
-```
+```scala
 addSbtPlugin("org.ensime" % "ensime-sbt" % "0.1.5-SNAPSHOT")
 ```
 
 Start Play:
 
-```
+```bash
 $ activator
 ```
 
 Enter 'ensime generate' at the play console. The plugin should generate a .ensime file in the root of your Play project.
 
-```
+```bash
 $ [MYPROJECT] ensime generate
 [info] Gathering project information...
 [info] Processing project: ProjectRef(file:/Users/aemon/projects/www/MYPROJECT/,MYPROJECT)...
@@ -182,9 +194,7 @@ That's all there is to it. You should now get type-checking, completion, etc. fo
 
 ### More Information
 
-Check out the ENSIME README at <https://github.com/ensime/ensime-emacs>.
-If you have questions, post them in the ensime group at <https://groups.google.com/forum/?fromgroups=#!forum/ensime>.
-
+Check out the ENSIME README at <https://github.com/ensime/ensime-emacs>. If you have questions, post them in the ensime group at <https://groups.google.com/forum/?fromgroups=#!forum/ensime>.
 
 ## All Scala Plugins if needed
 
@@ -194,8 +204,8 @@ Scala is a newer programming language, so the functionality is provided in plugi
 2. NetBeans Scala Plugin: <https://github.com/dcaoyuan/nbscala>
 3. IntelliJ IDEA Scala Plugin: <http://confluence.jetbrains.net/display/SCA/Scala+Plugin+for+IntelliJ+IDEA>
 4. IntelliJ IDEA's plugin is under active development, and so using the nightly build may give you additional functionality at the cost of some minor hiccups.
-5. Nika (11.x) Plugin Repository: <http://www.jetbrains.com/idea/plugins/scala-nightly-nika.xml>
-6. Leda (12.x) Plugin Repository: <http://www.jetbrains.com/idea/plugins/scala-nightly-leda.xml>
+5. Nika (11.x) Plugin Repository: <https://www.jetbrains.com/idea/plugins/scala-nightly-nika.xml>
+6. Leda (12.x) Plugin Repository: <https://www.jetbrains.com/idea/plugins/scala-nightly-leda.xml>
 7. IntelliJ IDEA Play plugin (available only for Leda 12.x): <http://plugins.intellij.net/plugin/?idea&pluginId=7080>
 8. ENSIME - Scala IDE Mode for Emacs: <https://github.com/aemoncannon/ensime>
 (see below for ENSIME/Play instructions)

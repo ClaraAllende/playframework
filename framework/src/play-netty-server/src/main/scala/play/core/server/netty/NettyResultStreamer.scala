@@ -29,6 +29,21 @@ object NettyResultStreamer {
   // A channel status holds whether the connection must be closed and the last subsequence sent
   class ChannelStatus(val closeConnection: Boolean, val lastSubsequence: Int)
 
+  // cache the date header of the last response so we only need to compute it every second
+  private[this] var cachedDateHeader: (Long, String) = (Long.MinValue, null)
+  private[this] def dateHeader: String = {
+    val currentTimeMillis = System.currentTimeMillis()
+    val currentTimeSeconds = currentTimeMillis / 1000
+    cachedDateHeader match {
+      case (cachedSeconds, dateHeaderString) if cachedSeconds == currentTimeSeconds =>
+        dateHeaderString
+      case _ =>
+        val dateHeaderString = ResponseHeader.httpDateFormat.print(currentTimeMillis)
+        cachedDateHeader = currentTimeSeconds -> dateHeaderString
+        dateHeaderString
+    }
+  }
+
   /**
    * Send the result to netty
    *
@@ -72,7 +87,7 @@ object NettyResultStreamer {
             case ServerResultUtils.StreamWithKnownLength(enum) =>
               streamEnum(enum)
             case ServerResultUtils.StreamWithNoBody =>
-              // `StreamWithNoBody` won't add the Content-Length entity-header to the response (if not already present) 
+              // `StreamWithNoBody` won't add the Content-Length entity-header to the response (if not already present)
               sendContent()
             case ServerResultUtils.StreamWithStrictBody(body) =>
               // We successfully buffered it, so set the content length and send the whole thing as one buffer
@@ -88,6 +103,7 @@ object NettyResultStreamer {
           }
       }
     }
+
     val sentResponse: Future[ChannelStatus] = send(result)
 
     // Clean up
@@ -95,9 +111,9 @@ object NettyResultStreamer {
       case Success(cs: ChannelStatus) =>
         if (cs.closeConnection) {
           // Close in an orderely fashion.
-          val channel = oue.getChannel;
+          val channel = oue.getChannel
           val closeEvent = new DownstreamChannelStateEvent(
-            channel, channel.getCloseFuture, ChannelState.OPEN, java.lang.Boolean.FALSE);
+            channel, channel.getCloseFuture, ChannelState.OPEN, java.lang.Boolean.FALSE)
           val ode = new OrderedDownstreamChannelEvent(oue, cs.lastSubsequence + 1, true, closeEvent)
           ctx.sendDownstream(ode)
         }
@@ -125,20 +141,18 @@ object NettyResultStreamer {
   }
 
   def createNettyResponse(header: ResponseHeader, connectionHeader: ServerResultUtils.ConnectionHeader, httpVersion: HttpVersion) = {
-    val responseStatus = header.reasonPhrase.fold {
-      HttpResponseStatus.valueOf(header.status)
-    } {
-      phrase => new HttpResponseStatus(header.status, phrase)
+    val responseStatus = header.reasonPhrase match {
+      case Some(phrase) => new HttpResponseStatus(header.status, phrase)
+      case None => HttpResponseStatus.valueOf(header.status)
     }
     val nettyResponse = new DefaultHttpResponse(httpVersion, responseStatus)
-
-    import scala.collection.JavaConverters._
+    val nettyHeaders = nettyResponse.headers()
 
     // Set response headers
     val headers = ServerResultUtils.splitSetCookieHeaders(header.headers)
     try {
-      headers.foreach {
-        case (name, value) => nettyResponse.headers().add(name, value)
+      headers foreach {
+        case (name, value) => nettyHeaders.add(name, value)
       }
     } catch {
       case NonFatal(e) =>
@@ -148,10 +162,17 @@ object NettyResultStreamer {
           logger.error(msg, e)
         }
         nettyResponse.setStatus(HttpResponseStatus.INTERNAL_SERVER_ERROR)
-        nettyResponse.headers().clear()
+        nettyHeaders.clear()
     }
 
-    connectionHeader.header.foreach(headerValue => nettyResponse.headers().set(CONNECTION, headerValue))
+    connectionHeader.header foreach { headerValue =>
+      nettyHeaders.set(CONNECTION, headerValue)
+    }
+
+    // Netty doesn't add the required Date header for us, so make sure there is one here
+    if (!nettyHeaders.contains(DATE)) {
+      nettyHeaders.add(DATE, dateHeader)
+    }
 
     nettyResponse
   }

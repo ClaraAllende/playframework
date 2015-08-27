@@ -1,6 +1,8 @@
 <!--- Copyright (C) 2009-2015 Typesafe Inc. <http://www.typesafe.com> -->
 # Writing Plugins
 
+> __Note__: Plugins are deprecated. Instead, use [[Modules|Modules]].
+
 In the context of the Play runtime, a plugin is a class that is able to plug into the Play lifecycle, and also allows sharing components in a non static way in your application.
 
 Not every library that adds functionality to Play is or needs to be a plugin in this context - a library that provides a custom filter for example does not need to be a plugin.
@@ -25,7 +27,7 @@ Choosing the right number for ordering for a plugin is important, it needs to fi
 
 * *100* - Utilities that have no dependencies, such as the messages plugin
 * *200* - Database connection pools
-* *300-500* - Plugins that depend on the database, such as JPA, ebean and evolutions
+* *300-500* - Plugins that depend on the database, such as JPA, Ebean and evolutions
 * *600* - The Play cache plugin
 * *700* - The WS plugin
 * *1000* - The Akka plugin

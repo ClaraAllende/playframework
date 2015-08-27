@@ -8,6 +8,7 @@ import java.util.Properties
 import java.util.concurrent.TimeUnit
 
 import com.typesafe.config._
+import com.typesafe.config.impl.ConfigImpl
 
 import scala.collection.JavaConverters._
 import scala.concurrent.duration.{ Duration, FiniteDuration }
@@ -36,12 +37,19 @@ object Configuration {
   private[play] def load(
     classLoader: ClassLoader,
     properties: Properties,
-    directSettings: Map[String, String],
+    directSettings: Map[String, AnyRef],
     allowMissingApplicationConf: Boolean): Configuration = {
 
     try {
       // Get configuration from the system properties.
-      val systemPropertyConfig = ConfigFactory.parseProperties(properties)
+      // Iterating through the system properties is prone to ConcurrentModificationExceptions (especially in our tests)
+      // Typesafe config maintains a cache for this purpose.  So, if the passed in properties *are* the system
+      // properties, use the Typesafe config cache, otherwise it should be safe to parse it ourselves.
+      val systemPropertyConfig = if (properties eq System.getProperties) {
+        ConfigImpl.systemPropertiesAsConfig()
+      } else {
+        ConfigFactory.parseProperties(properties)
+      }
 
       // Inject our direct settings into the config.
       val directConfig: Config = ConfigFactory.parseMap(directSettings.asJava)
@@ -53,15 +61,17 @@ object Configuration {
       // - We want to read config.file and config.resource settings from our
       //   own properties and directConfig rather than system properties.
       val applicationConfig: Config = {
-        def setting(key: String): Option[String] =
+        def setting(key: String): Option[AnyRef] =
           directSettings.get(key).orElse(Option(properties.getProperty(key)))
 
         {
-          setting("config.resource").map(resource => ConfigFactory.parseResources(classLoader, resource))
+          setting("config.resource").map(resource => ConfigFactory.parseResources(classLoader, resource.toString))
         } orElse {
-          setting("config.file").map(fileName => ConfigFactory.parseFileAnySyntax(new File(fileName)))
+          setting("config.file").map(fileName => ConfigFactory.parseFileAnySyntax(new File(fileName.toString)))
         } getOrElse {
-          val parseOptions = ConfigParseOptions.defaults.setClassLoader(classLoader).setAllowMissing(true)
+          val parseOptions = ConfigParseOptions.defaults
+            .setClassLoader(classLoader)
+            .setAllowMissing(allowMissingApplicationConf)
           ConfigFactory.defaultApplication(parseOptions)
         }
       }
@@ -106,8 +116,8 @@ object Configuration {
    * @param mode Application mode.
    * @return a `Configuration` instance
    */
-  @deprecated("Use load(Environment, Map[String,String]) instead", "2.4.0")
-  def load(appPath: File, mode: Mode.Mode = Mode.Dev, devSettings: Map[String, String] = Map.empty): Configuration = {
+  @deprecated("Use load(Environment, Map[String,AnyRef]) instead", "2.4.0")
+  def load(appPath: File, mode: Mode.Mode = Mode.Dev, devSettings: Map[String, AnyRef] = Map.empty): Configuration = {
     val currentMode = Play.maybeApplication.map(_.mode).getOrElse(mode)
     if (currentMode == Mode.Prod) {
       load(Thread.currentThread.getContextClassLoader, System.getProperties, Map.empty, allowMissingApplicationConf = false)
@@ -119,8 +129,8 @@ object Configuration {
   /**
    * Load a new Configuration from the Environment.
    */
-  def load(environment: Environment, devSettings: Map[String, String]): Configuration = {
-    load(environment.classLoader, System.getProperties, devSettings, allowMissingApplicationConf = false)
+  def load(environment: Environment, devSettings: Map[String, AnyRef]): Configuration = {
+    load(environment.classLoader, System.getProperties, devSettings, allowMissingApplicationConf = environment.mode == Mode.Test)
   }
 
   /**
@@ -1045,24 +1055,7 @@ private[play] class PlayConfig(val underlying: Config) {
 
   private[play] def reportDeprecation(path: String, deprecated: String): Unit = {
     val origin = underlying.getValue(deprecated).origin
-    Logger.warn(s"${origin.description}: $deprecated is deprecated, use $path instead:")
-    Try {
-      if (origin.url != null && origin.lineNumber() > 0) {
-        val is = origin.url.openStream()
-        try {
-          Source.fromInputStream(is).getLines()
-            .drop(origin.lineNumber() - 1)
-            .toStream.headOption
-            .map { line =>
-              Logger.warn(line)
-            }
-        } finally {
-          is.close()
-        }
-      }
-
-    }
-
+    Logger.warn(s"${origin.description}: $deprecated is deprecated, use $path instead")
   }
 }
 

@@ -3,7 +3,7 @@
  */
 package play.api.mvc
 
-import play.api.data.{ FormUtils, Form }
+import play.api.data.Form
 import play.core.parsers.Multipart
 
 import scala.language.reflectiveCalls
@@ -18,7 +18,7 @@ import play.api.libs.Files.TemporaryFile
 import MultipartFormData._
 import java.util.Locale
 import scala.util.control.NonFatal
-import play.api.http.{ ParserConfiguration, HttpConfiguration, HttpVerbs }
+import play.api.http.{ LazyHttpErrorHandler, ParserConfiguration, HttpConfiguration, HttpVerbs }
 import play.utils.PlayIO
 import play.api.http.Status._
 
@@ -172,7 +172,6 @@ object MultipartFormData {
 case class RawBuffer(memoryThreshold: Int, initialData: Array[Byte] = Array.empty[Byte]) {
 
   import play.api.libs.Files._
-  import scala.collection.mutable._
 
   @volatile private var inMemory: List[Array[Byte]] = if (initialData.length == 0) Nil else List(initialData)
   @volatile private var inMemorySize = initialData.length
@@ -294,12 +293,12 @@ trait BodyParsers {
     def DefaultMaxTextLength: Int = config.maxMemoryBuffer
 
     /**
-     * Default max length allowed for text based body.
+     * Default max length allowed for disk based body.
      *
      * You can configure it in application.conf:
      *
      * {{{
-     * parsers.disk.maxLength = 512k
+     * play.http.parser.maxDiskBuffer = 512k
      * }}}
      */
     def DefaultMaxDiskLength: Long = config.maxDiskBuffer
@@ -317,7 +316,7 @@ trait BodyParsers {
       import Execution.Implicits.trampoline
       Traversable.takeUpTo[Array[Byte]](maxLength)
         .transform(Iteratee.consume[Array[Byte]]().map(c => new String(c, request.charset.getOrElse("ISO-8859-1"))))
-        .flatMap(Iteratee.eofOrElse(Results.EntityTooLarge))
+        .flatMap(checkForEof(request))
     }
 
     /**
@@ -357,7 +356,7 @@ trait BodyParsers {
             buffer.close()
             buffer
           }
-        ).flatMap(Iteratee.eofOrElse(Results.EntityTooLarge))
+        ).flatMap(checkForEof(request))
       }
 
     /**
@@ -667,7 +666,10 @@ trait BodyParsers {
 
         val parser = Traversable.takeUpTo[Array[Byte]](maxLength).transform(
           Multipart.multipartParser(DefaultMaxTextLength, filePartHandler)(request)
-        ).flatMap(Iteratee.eofOrElse(Results.EntityTooLarge))
+        ).flatMap {
+            case d @ Left(r) => Iteratee.eofOrElse(r)(d)
+            case d => checkForEof(request)(d)
+          }
 
         parser.map {
           case Left(tooLarge) => Left(tooLarge)
@@ -724,8 +726,25 @@ trait BodyParsers {
     }
 
     private def createBadResult(msg: String, statusCode: Int = BAD_REQUEST): RequestHeader => Future[Result] = { request =>
-      Play.maybeApplication.map(_.errorHandler.onClientError(request, statusCode, msg))
-        .getOrElse(Future.successful(Results.BadRequest))
+      LazyHttpErrorHandler.onClientError(request, statusCode, msg)
+    }
+
+    /**
+     * Check that the input is finished. If it is finished, the iteratee returns `eofValue`.
+     * If the input is not finished then it returns a REQUEST_ENTITY_TOO_LARGE result.
+     */
+    private def checkForEof[A](request: RequestHeader): A => Iteratee[Array[Byte], Either[Result, A]] = { eofValue: A =>
+      import play.api.libs.iteratee.Execution.Implicits.trampoline
+      def cont: Iteratee[Array[Byte], Either[Result, A]] = Cont {
+        case in @ Input.El(e) =>
+          val badResult: Future[Result] = createBadResult("Request Entity Too Large", REQUEST_ENTITY_TOO_LARGE)(request)
+          Iteratee.flatten(badResult.map(r => Done(Left(r), in)))
+        case in @ Input.EOF =>
+          Done(Right(eofValue), in)
+        case Input.Empty =>
+          cont
+      }
+      cont
     }
 
     private def tolerantBodyParser[A](name: String, maxLength: Long, errorMessage: String)(parser: (RequestHeader, Array[Byte]) => A): BodyParser[A] =
@@ -745,7 +764,7 @@ trait BodyParsers {
                 case t => throw t
               }
             }
-          ).flatMap(Iteratee.eofOrElse(Results.EntityTooLarge))
+          ).flatMap(checkForEof(request))
 
         bodyParser.mapM {
           case Left(tooLarge) => Future.successful(Left(tooLarge))

@@ -6,7 +6,7 @@ import buildinfo.BuildInfo
 
 object Dependencies {
 
-  val specsVersion = "3.4"
+  val specsVersion = "3.6"
   val specsBuild = Seq(
     "specs2-core",
     "specs2-junit",
@@ -23,20 +23,21 @@ object Dependencies {
     "com.fasterxml.jackson.core" % "jackson-databind",
     "com.fasterxml.jackson.datatype" % "jackson-datatype-jdk8",
     "com.fasterxml.jackson.datatype" % "jackson-datatype-jsr310"
-  ).map(_ % "2.5.2")
+  ).map(_ % "2.5.4")
 
+  val slf4j = Seq("slf4j-api", "jul-to-slf4j", "jcl-over-slf4j").map("org.slf4j" % _ % "1.7.12")
   val guava = "com.google.guava" % "guava" % "18.0"
   val findBugs = "com.google.code.findbugs" % "jsr305" % "2.0.3" // Needed by guava
   val mockitoAll = "org.mockito" % "mockito-all" % "1.10.8"
 
   val h2database = "com.h2database" % "h2" % "1.4.187"
 
-  val acolyteVersion = "1.0.32"
+  val acolyteVersion = "1.0.33-j7p"
   val acolyte = "org.eu.acolyte" % "jdbc-driver" % acolyteVersion
 
   val jdbcDeps = Seq(
     "com.jolbox" % "bonecp" % "0.8.0.RELEASE",
-    "com.zaxxer" % "HikariCP" % "2.3.5",
+    "com.zaxxer" % "HikariCP" % "2.3.7",
     h2database,
     acolyte % Test,
     "tyrex" % "tyrex" % "1.0.1") ++ specsBuild.map(_ % Test)
@@ -84,7 +85,7 @@ object Dependencies {
       .exclude("javassist", "javassist"),
 
     // Used by the Java routing DSL
-    "net.jodah" % "typetools" % "0.4.0",
+    "net.jodah" % "typetools" % "0.4.1",
 
     guava,
     findBugs,
@@ -102,13 +103,13 @@ object Dependencies {
     mockitoAll
   ).map(_ % Test)
 
-  val jodatime = "joda-time" % "joda-time" % "2.7"
+  val jodatime = "joda-time" % "joda-time" % "2.8.1"
   val jodaConvert = "org.joda" % "joda-convert" % "1.7"
 
   def runtime(scalaVersion: String) =
-    Seq("slf4j-api", "jul-to-slf4j", "jcl-over-slf4j").map("org.slf4j" % _ % "1.7.12") ++
+    slf4j ++
     Seq("logback-core", "logback-classic").map("ch.qos.logback" % _ % "1.1.3") ++
-    Seq("akka-actor", "akka-slf4j").map("com.typesafe.akka" %% _ % "2.3.7") ++
+    Seq("akka-actor", "akka-slf4j").map("com.typesafe.akka" %% _ % "2.3.11") ++
     jacksons ++
     Seq(
       "org.scala-stm" %% "scala-stm" % "0.7",
@@ -123,15 +124,8 @@ object Dependencies {
 
       "javax.transaction" % "jta" % "1.1",
 
-      // Since we don't use any of the AOP features of guice, we exclude cglib.
-      // This solves issues later where cglib depends on an older version of asm,
-      // and other libraries (pegdown) depend on a newer version with a different groupId,
-      // and this causes binary issues.
-      "com.google.inject" % "guice" % "3.0" classifier "no_aop"
-        exclude("org.sonatype.sisu.inject", "cglib") exclude("aopalliance", "aopalliance"),
-      // It's odd, but need to exclude Guice, otherwise sbt overrides the classifier above
-      "com.google.inject.extensions" % "guice-assistedinject" % "3.0"
-        exclude("com.google.inject", "guice"),
+      "com.google.inject" % "guice" % "4.0",
+      "com.google.inject.extensions" % "guice-assistedinject" % "4.0",
 
       guava % Test,
 
@@ -141,16 +135,19 @@ object Dependencies {
     javaTestDeps
 
   val netty = Seq(
-    "io.netty"           % "netty"                 % "3.10.1.Final",
+    "io.netty"           % "netty"                 % "3.10.4.Final",
     "com.typesafe.netty" % "netty-http-pipelining" % "1.1.4"
   ) ++ specsBuild.map(_ % Test)
 
+  val nettyUtilsDependencies = slf4j
+
   val akkaHttp = Seq(
-    "com.typesafe.akka" %% "akka-http-core-experimental" % "1.0-M4"
+    "com.typesafe.akka" %% "akka-http-core-experimental" % "1.0"
   )
 
   val routesCompilerDependencies =  Seq(
-    "commons-io" % "commons-io" % "2.4"
+    "commons-io" % "commons-io" % "2.4",
+    specsMatcherExtra % Test
   ) ++ specsBuild.map(_ % Test)
 
   private def sbtPluginDep(sbtVersion: String, scalaVersion: String, moduleId: ModuleID) = {
@@ -170,7 +167,7 @@ object Dependencies {
     case _ => "org.scala-sbt" % "io" % sbtVersion % "provided"
   }
 
-  val jnotify = "net.contentobjects.jnotify" % "jnotify" % "0.94"
+  val jnotify = "net.contentobjects.jnotify" % "jnotify" % "0.94-play-1"
 
   val sbtRcVersion = "0.3.1"
   val sbtCoreNextVersion = "0.1.1"
@@ -202,7 +199,7 @@ object Dependencies {
     sbtPluginDep(sbtVersion, scalaVersion, "org.scala-sbt" % "sbt-core-next" % sbtCoreNextVersion)
   )
 
-  val typesafeConfig = "com.typesafe" % "config" % "1.3.0-M2"
+  val typesafeConfig = "com.typesafe" % "config" % "1.3.0"
 
   def sbtDependencies(sbtVersion: String, scalaVersion: String) = {
     def sbtDep(moduleId: ModuleID) = sbtPluginDep(sbtVersion, scalaVersion, moduleId)
@@ -218,18 +215,16 @@ object Dependencies {
       jnotify,
 
       sbtDep("com.typesafe.sbt" % "sbt-twirl" % BuildInfo.sbtTwirlVersion),
-      sbtDep("com.typesafe.sbt" % "sbt-play-enhancer" % "1.1.0-RC1"),
 
       sbtDep("com.typesafe.sbt" % "sbt-native-packager" % BuildInfo.sbtNativePackagerVersion),
 
-      sbtDep("com.typesafe.sbt" % "sbt-web" % "1.1.1"),
-      sbtDep("com.typesafe.sbt" % "sbt-js-engine" % "1.0.2"),
-      sbtDep("com.typesafe.sbt" % "sbt-webdriver" % "1.0.0")
+      sbtDep("com.typesafe.sbt" % "sbt-web" % "1.2.2"),
+      sbtDep("com.typesafe.sbt" % "sbt-js-engine" % "1.1.3")
     ) ++ javassist ++ specsBuild.map(_ % Test)
   }
 
   val playdocWebjarDependencies = Seq(
-    "org.webjars" % "jquery"   % "2.1.3"    % "webjars",
+    "org.webjars" % "jquery"   % "2.1.4"    % "webjars",
     "org.webjars" % "prettify" % "4-Mar-2013" % "webjars"
   )
 
@@ -243,7 +238,7 @@ object Dependencies {
   ) ++ specsBuild.map(_ % Test)
 
   val streamsDependencies = Seq(
-    "org.reactivestreams" % "reactive-streams" % "1.0.0.RC1"
+    "org.reactivestreams" % "reactive-streams" % "1.0.0"
   ) ++ specsBuild.map(_ % "test")
 
   def jsonDependencies(scalaVersion: String) = Seq(
@@ -270,12 +265,12 @@ object Dependencies {
       .exclude("org.jboss.netty", "netty")
   )
 
-  val playCacheDeps = "net.sf.ehcache" % "ehcache-core" % "2.6.10" +:
+  val playCacheDeps = "net.sf.ehcache" % "ehcache-core" % "2.6.11" +:
     specsBuild.map(_ % Test)
 
   val playWsDeps = Seq(
     guava,
-    "com.ning" % "async-http-client" % "1.9.18"
+    "com.ning" % "async-http-client" % "1.9.21"
   ) ++ Seq("signpost-core", "signpost-commonshttp4").map("oauth.signpost" % _  % "1.2.1.2") ++
   (specsBuild :+ specsMatcherExtra).map(_ % Test) :+
   mockitoAll % Test

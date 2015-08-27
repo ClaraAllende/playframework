@@ -25,13 +25,13 @@ To use Play's specs2 support, add the Play specs2 dependency to your build as a 
 libraryDependencies += specs2 % Test
 ```
 
-In [specs2](http://etorreborre.github.io/specs2/), tests are organized into specifications, which contain examples which run the system under test through various different code paths.
+In [specs2](https://etorreborre.github.io/specs2/), tests are organized into specifications, which contain examples which run the system under test through various different code paths.
 
 Specifications extend the [`Specification`](https://etorreborre.github.io/specs2/api/SPECS2-3.4/index.html#org.specs2.mutable.Specification) trait and are using the should/in format:
 
 @[scalatest-helloworldspec](code/specs2/HelloWorldSpec.scala)
 
-Specifications can be run in either IntelliJ IDEA (using the [Scala plugin](http://blog.jetbrains.com/scala/)) or in Eclipse (using the [Scala IDE](http://scala-ide.org/)).  Please see the [[IDE page|IDE]] for more details.
+Specifications can be run in either IntelliJ IDEA (using the [Scala plugin](https://blog.jetbrains.com/scala/)) or in Eclipse (using the [Scala IDE](http://scala-ide.org/)).  Please see the [[IDE page|IDE]] for more details.
 
 NOTE: Due to a bug in the [presentation compiler](https://scala-ide-portfolio.assembla.com/spaces/scala-ide/support/tickets/1001843-specs2-tests-with-junit-runner-are-not-recognized-if-there-is-package-directory-mismatch#/activity/ticket:), tests must be defined in a specific format to work with Eclipse:
 
@@ -71,7 +71,7 @@ There are also [optional matchers](https://etorreborre.github.io/specs2/guide/SP
 
 Mocks are used to isolate unit tests against external dependencies.  For example, if your class depends on an external `DataService` class, you can feed appropriate data to your class without instantiating a `DataService` object.
 
-[Mockito](https://code.google.com/p/mockito/) is integrated into specs2 as the default [mocking library](https://etorreborre.github.io/specs2/guide/SPECS2-3.4/org.specs2.guide.UseMockito.html).
+[Mockito](https://github.com/mockito/mockito) is integrated into specs2 as the default [mocking library](https://etorreborre.github.io/specs2/guide/SPECS2-3.4/org.specs2.guide.UseMockito.html).
 
 To use Mockito, add the following import:
 
@@ -131,7 +131,7 @@ In this way, the `isAdmin` method can be tested by mocking out the `UserReposito
 
 ## Unit Testing Controllers
 
-Controllers are defined as objects in Play, and so can be trickier to unit test.  In Play this can be alleviated by [[dependency injection|ScalaDependencyInjection]] using [`getControllerInstance`](api/scala/index.html#play.api.GlobalSettings@getControllerInstance).  Another way to finesse unit testing with a controller is to use a trait with an [explicitly typed self reference](http://www.naildrivin5.com/scalatour/wiki_pages/ExplcitlyTypedSelfReferences) to the controller:
+When defining controllers as objects, they can be trickier to unit test. In Play this can be alleviated by [[dependency injection|ScalaDependencyInjection]]. Another way to finesse unit testing with a controller declared as a object is to use a trait with an [explicitly typed self reference](http://www.naildrivin5.com/scalatour/wiki_pages/ExplcitlyTypedSelfReferences) to the controller:
 
 @[scalatest-examplecontroller](code/specs2/ExampleControllerSpec.scala)
 
@@ -141,8 +141,8 @@ and then test the trait:
 
 ## Unit Testing EssentialAction
 
-Testing [`Action`](api/scala/index.html#play.api.mvc.Action) or [`Filter`](api/scala/index.html#play.api.mvc.Filter) can require to test an [`EssentialAction`](api/scala/index.html#play.api.mvc.EssentialAction) ([[more information about what an EssentialAction is|HttpApi]])
+Testing [`Action`](api/scala/play/api/mvc/Action.html) or [`Filter`](api/scala/play/api/mvc/Filter.html) can require to test an [`EssentialAction`](api/scala/play/api/mvc/EssentialAction.html) ([[more information about what an EssentialAction is|HttpApi]])
 
-For this, the test [`Helpers.call`](api/scala/index.html#play.api.test.Helpers@call) can be used like that:
+For this, the test [`Helpers.call`](api/scala/play/api/test/Helpers$.html#call) can be used like that:
 
 @[scalatest-exampleessentialactionspec](code/specs2/ExampleEssentialActionSpec.scala)

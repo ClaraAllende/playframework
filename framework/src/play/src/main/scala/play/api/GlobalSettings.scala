@@ -82,21 +82,20 @@ trait GlobalSettings {
   }
 
   /**
-   * Additional configuration provided by the application.  This is invoked by the default implementation of
-   * onLoadConfig, so if you override that, this won't be invoked.
+   * @deprecated This method does not do anything.
+   * Instead, specify configuration in your config file
+   * or make your own ApplicationLoader (see GuiceApplicationBuilder.loadConfig).
    */
-  def configuration: Configuration = Configuration.empty
+  @Deprecated
+  final def configuration: Configuration = Configuration.empty
 
   /**
-   * Called just after configuration has been loaded, to give the application an opportunity to modify it.
-   *
-   * @param config the loaded configuration
-   * @param path the application path
-   * @param classloader The applications classloader
-   * @param mode The mode the application is running in
-   * @return The configuration that the application should use
+   * @deprecated This method does not do anything.
+   * Instead, specify configuration in your config file
+   * or make your own ApplicationLoader (see GuiceApplicationBuilder.loadConfig).
    */
-  def onLoadConfig(config: Configuration, path: File, classloader: ClassLoader, mode: Mode.Mode): Configuration =
+  @Deprecated
+  final def onLoadConfig(config: Configuration, path: File, classloader: ClassLoader, mode: Mode.Mode): Configuration =
     config ++ configuration
 
   /**
@@ -140,9 +139,9 @@ trait GlobalSettings {
       val context = Play.maybeApplication.fold("") { app =>
         httpConfigurationCache(app).context.stripSuffix("/")
       }
+      val inContext = context.isEmpty || request.path == context || request.path.startsWith(context + "/")
       next(request) match {
-        case action: EssentialAction if context.isEmpty || request.path == context || request.path.startsWith(context + "/") =>
-          doFilter(action)
+        case action: EssentialAction if inContext => doFilter(action)
         case handler => handler
       }
   }

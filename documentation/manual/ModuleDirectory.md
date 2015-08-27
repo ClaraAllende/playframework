@@ -7,7 +7,7 @@
 
 ## Airbrake.io notifier
 
-* **Website:** <http://teamon.github.com/play-airbrake/>
+* **Website:** <http://teamon.eu/play-airbrake/>
 * **Documentation:** <https://github.com/teamon/play-airbrake/blob/master/README.md>
 * **Short description:** Send exception notifications to airbrake.io
 
@@ -57,7 +57,7 @@
 
 ## Currency Converter (Java)
 
-* **Website:** <http://edulify.github.io/play-currency-converter-module.edulify.com/>
+* **Website:** <https://edulify.github.io/play-currency-converter-module.edulify.com/>
 * **Documentation:** <https://github.com/edulify/play-currency-converter-module.edulify.com/blob/master/README.md>
 * **Short description:** Currency converter for Play. It uses web services to get the current exchange rate.
 
@@ -110,7 +110,7 @@
 
 ## Geolocation (Java)
 
-* **Website:** <http://edulify.github.io/play-geolocation-module.edulify.com/>
+* **Website:** <https://edulify.github.io/play-geolocation-module.edulify.com/>
 * **Documentation:** <https://github.com/edulify/play-geolocation-module.edulify.com/blob/master/README.md>
 * **Short description:** Module to retrieve Geolocation data based on IP.
 
@@ -178,6 +178,12 @@
 * **Documentation:** <https://github.com/jmparsons/play-lessc/blob/master/README.md>
 * **Short description:** Allows [Less](http://lesscss.org/) command line compilation through Node
 
+## Liquibase Module
+
+* **Website:** <https://github.com/Ticketfly/play-liquibase>
+* **Documentation:** <https://github.com/Ticketfly/play-liquibase/blob/master/README.md>
+* **Short description:** Runs [Liquibase](http://www.liquibase.org/) database schema migrations on app startup
+
 ## Manual Dependency Injection Plugin (Java and Scala)
 * **Website (docs, sample):** <https://github.com/typesafehub/play-plugins>
 * **Short description:** Provides DI via manual injection
@@ -212,7 +218,7 @@
 
 ## Mountable routing
 
-* **Website:** <http://teamon.github.com/play-navigator/>
+* **Website:** <http://teamon.eu/play-navigator/>
 * **Documentation:** <https://github.com/teamon/play-navigator/blob/master/README.md>
 * **Description:** <http://codetunes.com/2012/05/09/scala-dsl-tutorial-writing-web-framework-router>
 
@@ -244,13 +250,19 @@
 
 ## Play! Authenticate (Java)
 
-* **Website:** <http://joscha.github.com/play-authenticate/>
+* **Website:** <https://joscha.github.io/play-authenticate/>
 * **Documentation:** <https://github.com/joscha/play-authenticate/blob/master/README.md>
 * **Short description:** A highly customizable authentication module for Play
 
 ## play2-sprites
 * **Website:** <https://github.com/koofr/play2-sprites/>
 * **Short description:** play2-sprites is an sbt plugin that generates sprites from images.
+
+## Play-Bootstrap3 (Java and Scala)
+* **Website:** <http://play-bootstrap3.herokuapp.com/>
+* **Documentation:** <http://play-bootstrap3.herokuapp.com/docs>
+* **Repository:** <https://github.com/adrianhurt/play-bootstrap3>
+* **Short description:** a collection of input helpers and field constructors for Play Framework 2.4 to render Twitter Bootstrap 3 HTML code.
 
 ## play-jaxrs (Java)
 * **Website (docs, sample):** [play-jaxrs](https://github.com/pk11/play-jaxrs/)
@@ -270,15 +282,15 @@
 * **Short description:** This plugin makes Slick a first-class citizen of Play.
 
 ## Pusher
-* **Website:** <http://www.pusher.com>
+* **Website:** <https://pusher.com/>
 * **Documentation:** <https://github.com/tindr/Play2Pusher>
 * **Short description:** Easily interact with the Pusher Service within your Play application.
 
 ## Play Dok
 
-* **Website:** <http://www.applidok.com>
+* **Website:** <http://fudok.com/>
 * **Documentation:** <https://github.com/cchantep/play-dok/>
-* **Short description:** Library to integrate Applidok PDF templating service with your Play application.
+* **Short description:** Library to integrate Fukdok PDF templating service with your Play application.
 
 ## Qunit (Java)
 
@@ -291,8 +303,8 @@
 * **Short description:** Provides a redis based cache implementation, also lets you use Redis specific APIs
 
 ## Swaggerkit (Scala)
-* **Website (docs, sample, code):** https://github.com/eamelink/swaggerkit
-* **Short description:** Helps you expose a [Swagger](http://swagger.wordnik.com/) specification of a JSON REST API built with Play in a clean way.
+* **Website (docs, sample, code):** <https://github.com/eamelink/swaggerkit>
+* **Short description:** Helps you expose a [Swagger](http://swagger.io/) specification of a JSON REST API built with Play in a clean way.
 
 ## Emailer Plugin  (Java and Scala)
 * **Website (docs, sample):** <https://github.com/playframework/play-mailer>
@@ -314,7 +326,7 @@
 
 ## SecureSocial (Java and Scala)
 
-* **Website:** <http://www.securesocial.ws/>
+* **Website:** <http://securesocial.ws/>
 * **Short description:** An authentication module supporting OAuth, OAuth2, OpenID, Username/Password and custom authentication schemes.
 
 ## Silhouette (Scala)
@@ -325,7 +337,7 @@
 
 ## Sitemap Generator (Java)
 
-* **Website:** <http://edulify.github.io/play-sitemap-module.edulify.com/>
+* **Website:** <https://edulify.github.io/play-sitemap-module.edulify.com/>
 * **Documentation:** <https://github.com/edulify/play-sitemap-module.edulify.com/blob/master/README.md>
 * **Short description:** Automatic [sitemaps](http://www.sitemaps.org/) generator for Play
 
@@ -382,12 +394,12 @@
 
 ## XWiki Rendering module (Scala)
 
-* **Website:** http://literalice.github.com/play-xwiki-rendering/
-* **Documentation:** https://github.com/literalice/play-xwiki-rendering/
+* **Website:** <https://literalice.github.io/play-xwiki-rendering/>
+* **Documentation:** <https://github.com/literalice/play-xwiki-rendering/>
 * **Short description:** XWiki Rendering Framework integration for Play
 
 ## Thymeleaf module (Scala)
-* **Website:**  https://github.com/dmitraver/scala-play-thymeleaf-plugin
-* **Documentation:** https://github.com/dmitraver/scala-play-thymeleaf-plugin/blob/master/README.md
+* **Website:** <https://github.com/dmitraver/scala-play-thymeleaf-plugin>
+* **Documentation:** <https://github.com/dmitraver/scala-play-thymeleaf-plugin/blob/master/README.md>
 * **Short description:** Allows to use [Thymeleaf](http://www.thymeleaf.org/) template engine as an alternative
 to Twirl

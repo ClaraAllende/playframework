@@ -136,7 +136,7 @@ trait Langs {
    * These can be configured in `application.conf`, like so:
    *
    * {{{
-   * play.modules.i18n.langs="fr,en,de"
+   * play.i18n.langs = ["fr", "en", "de"]
    * }}}
    */
   def availables: Seq[Lang]
@@ -164,7 +164,7 @@ class DefaultLangs @Inject() (configuration: Configuration) extends Langs {
 
     langs.map { lang =>
       try { Lang(lang) } catch {
-        case NonFatal(e) => throw configuration.reportError("play.modules.i18n.langs",
+        case NonFatal(e) => throw configuration.reportError("play.i18n.langs",
           "Invalid language code [" + lang + "]", Some(e))
       }
     }
@@ -237,7 +237,7 @@ object Messages {
    * Parse all messages of a given input.
    */
   def parse(messageSource: MessageSource, messageSourceName: String): Either[PlayException.ExceptionSource, Map[String, String]] = {
-    new Messages.MessagesParser(messageSource, "").parse.right.map { messages =>
+    new Messages.MessagesParser(messageSource, messageSourceName).parse.right.map { messages =>
       messages.map { message => message.key -> message.pattern }.toMap
     }
   }

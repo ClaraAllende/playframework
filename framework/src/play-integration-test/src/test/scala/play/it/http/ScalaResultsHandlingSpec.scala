@@ -18,6 +18,8 @@ object AkkaHttpScalaResultsHandlingSpec extends ScalaResultsHandlingSpec with Ak
 
 trait ScalaResultsHandlingSpec extends PlaySpecification with WsTestClient with ServerIntegrationSpecification {
 
+  sequential
+
   "scala body handling" should {
 
     def tryRequest[T](result: Result)(block: Try[WSResponse] => T) = withServer(result) { implicit port =>
@@ -38,6 +40,10 @@ trait ScalaResultsHandlingSpec extends PlaySpecification with WsTestClient with 
       ))) {
         block(port)
       }
+    }
+
+    "add Date header" in makeRequest(Results.Ok("Hello world")) { response =>
+      response.header(DATE) must beSome
     }
 
     "add Content-Length when enumerator contains a single item" in makeRequest(Results.Ok("Hello world")) { response =>
@@ -61,7 +67,7 @@ trait ScalaResultsHandlingSpec extends PlaySpecification with WsTestClient with 
           response.body must_== "Hello"
         case Failure(t) =>
           t must haveClass[IOException]
-          t.getMessage must_== "Remotely Closed"
+          t.getMessage.toLowerCase must_== "remotely closed"
       }
     }
 
@@ -103,7 +109,7 @@ trait ScalaResultsHandlingSpec extends PlaySpecification with WsTestClient with 
           BasicRequest("GET", "/", "HTTP/1.0", Map("Connection" -> "keep-alive"), "")
         )(0)
         response.status must_== 200
-        response.headers.get(CONNECTION) must beNone
+        response.headers.get(CONNECTION).map(_.toLowerCase) must beOneOf(None, Some("close"))
       }
 
     "close the connection when the connection close header is present" in withServer(
@@ -265,7 +271,7 @@ trait ScalaResultsHandlingSpec extends PlaySpecification with WsTestClient with 
         response.allHeaders.get(SET_COOKIE) must beSome.like {
           case rawCookieHeaders =>
             val decodedCookieHeaders: Set[Set[Cookie]] = rawCookieHeaders.map { headerValue =>
-              Cookies.decode(headerValue).to[Set]
+              Cookies.decodeSetCookieHeader(headerValue).to[Set]
             }.to[Set]
             decodedCookieHeaders must_== (Set(Set(aCookie), Set(bCookie), Set(cCookie)))
         }
@@ -335,14 +341,14 @@ trait ScalaResultsHandlingSpec extends PlaySpecification with WsTestClient with 
       }
 
     "return a 500 response if a forbidden character is used in a response's header field" in withServer(
-      // both colon and space characters are not allowed in a header's field name 
+      // both colon and space characters are not allowed in a header's field name
       Results.Ok.withHeaders("BadFieldName: " -> "SomeContent")
     ) { port =>
         val response = BasicHttpClient.makeRequests(port)(
           BasicRequest("GET", "/", "HTTP/1.1", Map(), "")
         ).apply(0)
         response.status must_== Status.INTERNAL_SERVER_ERROR
-        (response.headers - (CONTENT_LENGTH)) must be(Map.empty)
-      }.pendingUntilAkkaHttpFixed // https://github.com/akka/akka/issues/16988
+        (response.headers -- Set(CONNECTION, CONTENT_LENGTH, DATE, SERVER)) must be(Map.empty)
+      }
   }
 }

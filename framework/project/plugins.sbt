@@ -4,8 +4,8 @@ buildInfoSettings
 
 sourceGenerators in Compile <+= buildInfo
 
-val sbtNativePackagerVersion = "1.0.0"
-val sbtTwirlVersion = "1.0.4"
+val sbtNativePackagerVersion = "1.0.1"
+val sbtTwirlVersion = sys.props.getOrElse("twirl.version", "1.1.1")
 
 buildInfoKeys := Seq[BuildInfoKey](
   "sbtNativePackagerVersion" -> sbtNativePackagerVersion,
@@ -16,27 +16,18 @@ logLevel := Level.Warn
 
 scalacOptions ++= Seq("-deprecation", "-language:_")
 
-addSbtPlugin("com.typesafe.play" % "interplay" % "0.1.0")
-
+addSbtPlugin("com.typesafe.play" % "interplay" % sys.props.getOrElse("interplay.version", "1.0.2"))
 addSbtPlugin("com.typesafe.sbt" % "sbt-twirl" % sbtTwirlVersion)
-
-addSbtPlugin("com.typesafe" % "sbt-mima-plugin" % "0.1.6")
-
+addSbtPlugin("com.typesafe" % "sbt-mima-plugin" % "0.1.7")
 addSbtPlugin("com.typesafe.sbt" % "sbt-scalariform" % "1.3.0")
-
-addSbtPlugin("com.typesafe.sbt" % "sbt-native-packager" % sbtNativePackagerVersion)
 
 libraryDependencies ++= Seq(
   "org.scala-sbt" % "scripted-plugin" % sbtVersion.value,
-  "org.webjars" % "webjars-locator" % "0.19"
+  "org.webjars" % "webjars-locator-core" % "0.26"
 )
 
 // override scalariform version to get some fixes
-
-resolvers += Resolver.typesafeRepo("maven-releases")
-
 libraryDependencies += "org.scalariform" %% "scalariform" % "0.1.5-20140822-69e2e30"
+resolvers += Resolver.typesafeRepo("releases")
 
 addSbtPlugin("com.eed3si9n" % "sbt-doge" % "0.1.5")
-
-addSbtPlugin("com.jsuereth" % "sbt-pgp" % "1.0.0")

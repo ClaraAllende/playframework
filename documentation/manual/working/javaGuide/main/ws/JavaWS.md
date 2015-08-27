@@ -1,3 +1,4 @@
+<!--- Copyright (C) 2009-2015 Typesafe Inc. <http://www.typesafe.com> -->
 # The Play WS API
 
 Sometimes we would like to call other HTTP services from within a Play application. Play supports this via its [WS library](api/java/play/libs/ws/package-summary.html), which provides a way to make asynchronous HTTP calls.
@@ -18,15 +19,15 @@ Now any controller or component that wants to use WS will have to add the follow
 
 @[ws-controller](code/javaguide/ws/Application.java)
 
-To build an HTTP request, you start with `WS.url()` to specify the URL.
+To build an HTTP request, you start with `ws.url()` to specify the URL.
 
 @[ws-holder](code/javaguide/ws/JavaWS.java)
 
-This returns a [`WSRequestHolder`](api/java/play/libs/ws/WSRequestHolder.html) that you can use to specify various HTTP options, such as setting headers. You can chain calls together to construct complex requests.
+This returns a [`WSRequest`](api/java/play/libs/ws/WSRequest.html) that you can use to specify various HTTP options, such as setting headers. You can chain calls together to construct complex requests.
 
 @[ws-complex-holder](code/javaguide/ws/JavaWS.java)
 
-You end by calling a method corresponding to the HTTP method you want to use.  This ends the chain, and uses all the options defined on the built request in the `WSRequestHolder`.
+You end by calling a method corresponding to the HTTP method you want to use.  This ends the chain, and uses all the options defined on the built request in the [`WSRequest`](api/java/play/libs/ws/WSRequest.html).
 
 @[ws-get](code/javaguide/ws/JavaWS.java)
 
@@ -125,11 +126,11 @@ You can map a `Promise<WSResponse>` to a `Promise<Result>` that can be handled d
 
 WSClient is a wrapper around the underlying [AsyncHttpClient](https://github.com/AsyncHttpClient/async-http-client). It is useful for defining multiple clients with different profiles, or using a mock.
 
-The default client can be called from the WS class:
+The default client can be called from the WSClient class:
 
 @[ws-client](code/javaguide/ws/JavaWS.java)
 
-You can define a WS client directly from code and use this for making requests.  Note that you must follow a particular series of steps to use HTTPS correctly if you are defining a client directly:
+You can instantiate a WSClient directly from code and use this for making requests.  Note that you must follow a particular series of steps to use HTTPS correctly if you are defining a client directly:
 
 @[ws-custom-client-imports](code/javaguide/ws/JavaWS.java)
 
@@ -143,7 +144,7 @@ You can also get access to the underlying `AsyncHttpClient`.
 
 This is important in a couple of cases.  WS has a couple of limitations that require access to the client:
 
-* `WS` does not support multi part form upload directly.  You can use the underlying client with [RequestBuilder.addBodyPart](http://asynchttpclient.github.io/async-http-client/apidocs/com/ning/http/client/RequestBuilder.html).
+* `WS` does not support multi part form upload directly.  You can use the underlying client with [RequestBuilder.addBodyPart](https://asynchttpclient.github.io/async-http-client/apidocs/com/ning/http/client/RequestBuilder.html).
 * `WS` does not support streaming body upload.  In this case, you should use the `FeedableBodyGenerator` provided by AsyncHttpClient.
 
 ## Configuring WS
@@ -172,7 +173,7 @@ To configure WS for use with HTTP over SSL/TLS (HTTPS), please see [[Configuring
 ### Configuring AsyncClientConfig
 
 The following advanced settings can be configured on the underlying AsyncHttpClientConfig.
-Please refer to the [AsyncHttpClientConfig Documentation](http://asynchttpclient.github.io/async-http-client/apidocs/com/ning/http/client/AsyncHttpClientConfig.Builder.html) for more information.
+Please refer to the [AsyncHttpClientConfig Documentation](https://asynchttpclient.github.io/async-http-client/apidocs/com/ning/http/client/AsyncHttpClientConfig.Builder.html) for more information.
 
 * `play.ws.ning.allowPoolingConnection`
 * `play.ws.ning.allowSslConnectionPool`
@@ -186,4 +187,3 @@ Please refer to the [AsyncHttpClientConfig Documentation](http://asynchttpclient
 * `play.ws.ning.maxRequestRetry`
 * `play.ws.ning.removeQueryParamsOnRedirect`
 * `play.ws.ning.useRawUrl`
-

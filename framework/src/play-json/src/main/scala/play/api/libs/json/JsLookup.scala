@@ -28,6 +28,16 @@ case class JsLookup(result: JsLookupResult) extends AnyVal {
   }
 
   /**
+   * Access the last element of this array.
+   */
+  def last: JsLookupResult = result match {
+    case JsDefined(JsArray(values)) if values.nonEmpty => JsDefined(values.last)
+    case JsDefined(arr: JsArray) => JsUndefined("Cannot get last element of " + arr)
+    case JsDefined(o) => JsUndefined(o + " is not an array")
+    case undef => undef
+  }
+
+  /**
    * Access a value of this array.
    *
    * @param index Element index.
@@ -91,6 +101,15 @@ sealed trait JsLookupResult extends Any with JsReadable {
   def validate[A](implicit rds: Reads[A]) = this match {
     case JsDefined(v) => v.validate[A]
     case undef: JsUndefined => JsError(undef.validationError)
+  }
+
+  /**
+   * If this result contains `JsNull` or is undefined, returns `JsSuccess(None)`.
+   * Otherwise returns the result of validating as an `A` and wrapping the result in a `Some`.
+   */
+  def validateOpt[A](implicit rds: Reads[A]): JsResult[Option[A]] = this match {
+    case JsUndefined() => JsSuccess(None)
+    case JsDefined(a) => Reads.optionWithNull(rds).reads(a)
   }
 }
 object JsLookupResult {

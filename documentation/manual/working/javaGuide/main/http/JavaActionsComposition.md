@@ -33,6 +33,8 @@ You also mix several actions by using custom action annotations:
 
 > **Note:**  ```play.mvc.Security.Authenticated``` and ```play.cache.Cached``` annotations and the corresponding predefined Actions are shipped with Play. See the relevant API documentation for more information.
 
+> **Note:**  Every request must be served by a distinct instance of your `play.mvc.Action`. If a singleton pattern is used, requests will be routed incorrectly during multiple request scenarios. For example, if you are using Spring as a DI container for Play, you need to make sure that your action beans are prototype scoped.
+
 ## Defining custom action annotations
 
 You can also mark action composition with your own annotation, which must itself be annotated using `@With`:
@@ -59,6 +61,8 @@ public class Admin extends Controller {
     
 }
 ```
+
+> **Note:** If you want the action composition annotation(s) put on a ```Controller``` class to be executed before the one(s) put on action methods set ```play.http.actionComposition.controllerAnnotationsFirst = true``` in ```application.conf```. However, be aware that if you use a third party module in your project it may rely on a certain execution order of its annotations.
 
 ## Passing objects from action to controller
 

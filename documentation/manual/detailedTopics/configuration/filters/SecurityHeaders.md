@@ -17,17 +17,23 @@ Scala
 Java
 : @[filters](code/detailedtopics/configuration/headers/Filters.java)
 
+The `Filters` class can either be in the root package, or if it has another name or is in another package, needs to be configured using `play.http.filters` in `application.conf`:
+
+```
+play.http.filters = "filters.MyFilters"
+```
+
 ## Configuring the security headers
 
-Scaladoc is available in the [play.filters.headers](api/scala/index.html#play.filters.headers.package) package.
+Scaladoc is available in the [play.filters.headers](api/scala/play/filters/headers/package.html) package.
 
 The filter will set headers in the HTTP response automatically.  The settings can can be configured through the following settings in `application.conf`
 
-* `play.filters.headers.frameOptions` - sets <a href="https://developer.mozilla.org/en-US/docs/HTTP/X-Frame-Options">X-Frame-Options</a>, "DENY" by default.
-* `play.filters.headers.xssProtection` - sets <a href="http://blogs.msdn.com/b/ie/archive/2008/07/02/ie8-security-part-iv-the-xss-filter.aspx">X-XSS-Protection</a>, "1; mode=block" by default.
-* `play.filters.headers.contentTypeOptions` - sets <a href="http://blogs.msdn.com/b/ie/archive/2008/09/02/ie8-security-part-vi-beta-2-update.aspx">X-Content-Type-Options</a>, "nosniff" by default.
-* `play.filters.headers.permittedCrossDomainPolicies` - sets <a href="http://www.adobe.com/devnet/articles/crossdomain_policy_file_spec.html">X-Permitted-Cross-Domain-Policies</a>, "master-only" by default.
-* `play.filters.headers.contentSecurityPolicy` - sets <a href="http://www.html5rocks.com/en/tutorials/security/content-security-policy/">Content-Security-Policy</a>, "default-src 'self'" by default.
+* `play.filters.headers.frameOptions` - sets [X-Frame-Options](https://developer.mozilla.org/en-US/docs/HTTP/X-Frame-Options), "DENY" by default.
+* `play.filters.headers.xssProtection` - sets [X-XSS-Protection](http://blogs.msdn.com/b/ie/archive/2008/07/02/ie8-security-part-iv-the-xss-filter.aspx), "1; mode=block" by default.
+* `play.filters.headers.contentTypeOptions` - sets [X-Content-Type-Options](http://blogs.msdn.com/b/ie/archive/2008/09/02/ie8-security-part-vi-beta-2-update.aspx), "nosniff" by default.
+* `play.filters.headers.permittedCrossDomainPolicies` - sets [X-Permitted-Cross-Domain-Policies](https://www.adobe.com/devnet/articles/crossdomain_policy_file_spec.html), "master-only" by default.
+* `play.filters.headers.contentSecurityPolicy` - sets [Content-Security-Policy](http://www.html5rocks.com/en/tutorials/security/content-security-policy/), "default-src 'self'" by default.
 
 Any of the headers can be disabled by setting a configuration value of `null`, for example:
 

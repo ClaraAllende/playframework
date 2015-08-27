@@ -3,8 +3,7 @@
 
 > Please note this documentation was initially published as an article by Pascal Voitot ([@mandubian](https://github.com/mandubian)) on [mandubian.com](http://mandubian.com/2012/11/11/JSON-inception/)
 
-
-> **This feature is still experimental because Scala Macros are still experimental in Scala 2.10.0. If you prefer not using an experimental feature from Scala, please use hand-written Reads/Writes/Format which are strictly equivalent.**
+> **This feature is still experimental because Scala Macros are still experimental in Scala 2.10. If you prefer not using an experimental feature from Scala, please use hand-written Reads/Writes/Format which are strictly equivalent.**
 
 ## <a name="wtf-inception-boring">Writing a default case class Reads/Writes/Format is so boring!</a>
 
@@ -232,5 +231,5 @@ object Person{
 
 - **Don't override apply function in companion object** because then the Macro will have several apply functions and won't choose.
 - **Json Macros only work when apply and  unapply have corresponding input/output types**: This is naturally the case for case classes. But if you want to the same with a trait, you must implement the same apply/unapply you would have in a case class.
-- **Json Macros are known to accept Option/Seq/List/Set & Map[String, _]**. For other generic types, test and if not working, use traditional way of writing Reads/Writes manually.
+- **Json Macros are known to accept Option/Seq/List/Set & Map[String, \_]**. For other generic types, test and if not working, use traditional way of writing Reads/Writes manually.
 

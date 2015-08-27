@@ -27,11 +27,34 @@ object ThreadPoolsSpec extends PlaySpecification {
       val config = """#default-config
         akka {
           fork-join-executor {
+            # Settings this to 1 instead of 3 seems to improve performance.
+            parallelism-factor = 1.0
+
+            parallelism-max = 24
+
+            # Setting this to LIFO changes the fork-join-executor
+            # to use a stack discipline for task scheduling. This usually
+            # improves throughput at the cost of possibly increasing
+            # latency and risking task starvation (which should be rare).
+            task-peeking-mode = LIFO
+          }
+        }
+      #default-config """
+      val parsed = ConfigFactory.parseString(config)
+      val actorSystem = ActorSystem("test", parsed.getConfig("akka"))
+      actorSystem.shutdown()
+      success
+    }
+
+    "use akka default thread pool configuration" in {
+      val config = """#akka-default-config
+        akka {
+          fork-join-executor {
             # The parallelism factor is used to determine thread pool size using the
             # following formula: ceil(available processors * factor). Resulting size
             # is then bounded by the parallelism-min and parallelism-max values.
             parallelism-factor = 3.0
-     
+
             # Min number of threads to cap factor-based parallelism number to
             parallelism-min = 8
 
@@ -39,7 +62,7 @@ object ThreadPoolsSpec extends PlaySpecification {
             parallelism-max = 64
           }
         }
-      #default-config """
+      #akka-default-config """
       val parsed = ConfigFactory.parseString(config)
       val actorSystem = ActorSystem("test", parsed.getConfig("akka"))
       actorSystem.shutdown()
@@ -155,12 +178,8 @@ object ThreadPoolsSpec extends PlaySpecification {
   }
 
   def runningWithConfig[T: AsResult](config: String )(block: Application => T) = {
-    val parsed = ConfigFactory.parseString(config)
-    val app = FakeApplication(withGlobal = Some(new GlobalSettings {
-      override def onLoadConfig(config: Configuration, path: File, classloader: ClassLoader, mode: Mode.Mode) = {
-        config ++ Configuration(parsed)
-      }
-    }))
+    val parsed: java.util.Map[String,Object] = ConfigFactory.parseString(config).root.unwrapped
+    val app = FakeApplication(additionalConfiguration = collection.JavaConversions.mapAsScalaMap(parsed).toMap)
     running(app)(block(app))
   }
 }

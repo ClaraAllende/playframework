@@ -1,7 +1,9 @@
 /*
- * Copyright (C) 2009-2013 Typesafe Inc. <http://www.typesafe.com>
+ * Copyright (C) 2009-2015 Typesafe Inc. <http://www.typesafe.com>
  */
 package play.filters.cors
+
+import play.api.http.{ DefaultHttpErrorHandler, HttpErrorHandler }
 
 import scala.concurrent.Future
 
@@ -30,8 +32,12 @@ import play.api.mvc.{ Filter, RequestHeader, Result }
  * @see [[http://www.w3.org/TR/cors/ CORS specification]]
  */
 class CORSFilter(
-    override protected val corsConfig: CORSConfig = CORSConfig(),
-    private val pathPrefixes: Seq[String] = Seq("/")) extends Filter with AbstractCORSPolicy {
+    override protected val corsConfig: CORSConfig,
+    override protected val errorHandler: HttpErrorHandler,
+    private val pathPrefixes: Seq[String]) extends Filter with AbstractCORSPolicy {
+
+  def this(corsConfig: CORSConfig = CORSConfig(), pathPrefixes: Seq[String] = Seq("/")) =
+    this(corsConfig, DefaultHttpErrorHandler, pathPrefixes)
 
   override protected val logger = Logger(classOf[CORSFilter])
 
@@ -46,7 +52,10 @@ class CORSFilter(
 
 object CORSFilter {
 
+  def apply(corsConfig: CORSConfig, errorHandler: HttpErrorHandler, pathPrefixes: Seq[String]) =
+    new CORSFilter(corsConfig, errorHandler, pathPrefixes)
+
   def apply(corsConfig: CORSConfig = CORSConfig(), pathPrefixes: Seq[String] = Seq("/")) =
-    new CORSFilter(corsConfig, pathPrefixes)
+    new CORSFilter(corsConfig, DefaultHttpErrorHandler, pathPrefixes)
 
 }

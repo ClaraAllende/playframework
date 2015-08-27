@@ -24,7 +24,7 @@ To use _ScalaTest + Play_, you'll need to add it to your build, by changing `bui
 ```scala
 libraryDependencies ++= Seq(
   "org.scalatest" %% "scalatest" % "2.2.1" % "test",
-  "org.scalatestplus" %% "play" % "1.2.0" % "test",
+  "org.scalatestplus" %% "play" % "1.4.0-M3" % "test",
 )
 ```
 
@@ -36,7 +36,7 @@ In [_ScalaTest + Play_](http://scalatest.org/plus/play), you define test classes
 
 You can alternatively [define your own base classes](http://scalatest.org/user_guide/defining_base_classes) instead of using `PlaySpec`.
 
-You can run your tests with Play itself, or in IntelliJ IDEA (using the [Scala plugin](http://blog.jetbrains.com/scala/)) or in Eclipse (using the [Scala IDE](http://scala-ide.org/) and the [ScalaTest Eclipse plugin](http://scalatest.org/user_guide/using_scalatest_with_eclipse)).  Please see the [[IDE page|IDE]] for more details.
+You can run your tests with Play itself, or in IntelliJ IDEA (using the [Scala plugin](https://blog.jetbrains.com/scala/)) or in Eclipse (using the [Scala IDE](http://scala-ide.org/) and the [ScalaTest Eclipse plugin](http://scalatest.org/user_guide/using_scalatest_with_eclipse)).  Please see the [[IDE page|IDE]] for more details.
 
 ### Matchers
 
@@ -54,7 +54,7 @@ For more information, see the documentation for [`MustMatchers`](http://doc.scal
 
 You can use mocks to isolate unit tests against external dependencies.  For example, if your class depends on an external `DataService` class, you can feed appropriate data to your class without instantiating a `DataService` object.
 
-ScalaTest provides integration with [Mockito](https://code.google.com/p/mockito/) via its [`MockitoSugar`](http://doc.scalatest.org/2.1.5/index.html#org.scalatest.mock.MockitoSugar) trait.
+ScalaTest provides integration with [Mockito](https://github.com/mockito/mockito) via its [`MockitoSugar`](http://doc.scalatest.org/2.1.5/index.html#org.scalatest.mock.MockitoSugar) trait.
 
 To use Mockito, mix `MockitoSugar` into your test class and then use the Mockito library to mock dependencies:
 
@@ -108,7 +108,7 @@ In this way, the `isAdmin` method can be tested by mocking out the `UserReposito
 
 ## Unit Testing Controllers
 
-Controllers are defined as objects in Play, and so can be trickier to unit test.  In Play this can be alleviated by [[dependency injection|ScalaDependencyInjection]] using [`getControllerInstance`](api/scala/index.html#play.api.GlobalSettings@getControllerInstance).  Another way to finesse unit testing with a controller is to use a trait with an [explicitly typed self reference](http://www.naildrivin5.com/scalatour/wiki_pages/ExplcitlyTypedSelfReferences) to the controller:
+When defining controllers as objects, they can be trickier to unit test. In Play this can be alleviated by [[dependency injection|ScalaDependencyInjection]]. Another way to finesse unit testing with a controller declared as a object is to use a trait with an [explicitly typed self reference](http://www.naildrivin5.com/scalatour/wiki_pages/ExplcitlyTypedSelfReferences) to the controller:
 
 @[scalatest-examplecontroller](code-scalatestplus-play/ExampleControllerSpec.scala)
 
@@ -124,8 +124,8 @@ use the pattern shown above (`apply(fakeRequest)`); instead you should use
 
 ## Unit Testing EssentialAction
 
-Testing [`Action`](api/scala/index.html#play.api.mvc.Action) or [`Filter`](api/scala/index.html#play.api.mvc.Filter) can require to test an an [`EssentialAction`](api/scala/index.html#play.api.mvc.EssentialAction) ([[more information about what an EssentialAction is|HttpApi]])
+Testing [`Action`](api/scala/play/api/mvc/Action.html) or [`Filter`](api/scala/play/api/mvc/Filter.html) can require to test an an [`EssentialAction`](api/scala/play/api/mvc/EssentialAction.html) ([[more information about what an EssentialAction is|HttpApi]])
 
-For this, the test [`Helpers.call`](api/scala/index.html#play.api.test.Helpers@call) can be used like that:
+For this, the test [`Helpers.call`](api/scala/play/api/test/Helpers$.html#call) can be used like that:
 
 @[scalatest-exampleessentialactionspec](code-scalatestplus-play/ExampleEssentialActionSpec.scala)

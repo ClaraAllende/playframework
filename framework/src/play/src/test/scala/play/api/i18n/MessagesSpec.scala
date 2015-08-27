@@ -7,7 +7,7 @@ import java.io.File
 
 import org.specs2.mutable._
 import play.api.mvc.{ Cookie, Cookies, Results }
-import play.api.{ Mode, Environment, Configuration }
+import play.api.{ PlayException, Mode, Environment, Configuration }
 import play.api.i18n.Messages.MessageSource
 import play.core.test.FakeRequest
 
@@ -62,7 +62,7 @@ object MessagesSpec extends Specification {
     }
 
     "support setting the language on a result" in {
-      val cookie = Cookies.decode(api.setLang(Results.Ok, Lang("en-AU")).header.headers("Set-Cookie")).head
+      val cookie = Cookies.decodeSetCookieHeader(api.setLang(Results.Ok, Lang("en-AU")).header.headers("Set-Cookie")).head
       cookie.name must_== "PLAY_LANG"
       cookie.value must_== "en-AU"
     }
@@ -85,6 +85,12 @@ object MessagesSpec extends Specification {
           .withHeaders("Accept-Language" -> "en")).lang must_== Lang("fr")
       }
 
+    }
+
+    "report error for unsupported lang" in {
+      new DefaultMessagesApi(new Environment(new File("."), this.getClass.getClassLoader, Mode.Dev),
+        Configuration.reference, new DefaultLangs(Configuration.reference ++ Configuration.from(Map("play.i18n.langs" -> Seq("wrong"))))
+      ) must throwA[PlayException]
     }
   }
 

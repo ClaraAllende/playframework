@@ -2,6 +2,8 @@
 
 # Copyright (C) 2009-2015 Typesafe Inc. <http://www.typesafe.com>
 
+# Legacy test script
+
 set -e
 export CURRENT=`pwd`
 export SCRIPT=`dirname "$0"`
@@ -23,6 +25,12 @@ echo "[info]"
 $BUILD "$@" ${CROSSBUILD}publishLocal
 
 echo "[info]"
+echo "[info] ---- CHECKING BINARY COMPATIBILITY"
+echo "[info]"
+
+./build "$@" mimaReportBinaryIssues
+
+echo "[info]"
 echo "[info] ---- PLAYFRAMEWORK CORE TEST RUNNER"
 echo "[info]"
 
@@ -36,7 +44,7 @@ $BUILD "$@" scripted
 
 if [ -n "$CROSSBUILD" ]
 then
-    $BUILD "$@" "set scalaVersion in PlayBuild.PlayProject := \"2.11.5\"" scripted
+    $BUILD "$@" "set scalaVersion in PlayBuild.PlayProject := \"2.11.6\"" scripted
 fi
 
 rm -rf ./logs
