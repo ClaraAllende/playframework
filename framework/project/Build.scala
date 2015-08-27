@@ -86,7 +86,8 @@ object BuildSettings {
           </developer>
         </developers>
     },
-    pomIncludeRepository := { _ => false }
+    pomIncludeRepository := { _ => false },
+    publishTo := Some("Despegar-Releases" at "http://flights-nexus.despegar.it:8081/nexus/content/repositories/releases")
   )
 
   def makeJavacOptions(version: String) = Seq("-source", version, "-target", version, "-encoding", "UTF-8", "-Xlint:-options")
@@ -362,7 +363,7 @@ object PlayBuild extends Build {
   lazy val SbtPluginProject = PlaySbtPluginProject("SBT-Plugin", "sbt-plugin")
     .settings(
       sbtPlugin := true,
-      publishMavenStyle := false,
+      publishMavenStyle := true,
       libraryDependencies ++= sbtDependencies,
       sourceGenerators in Compile <+= (version, scalaVersion, sbtVersion, sourceManaged in Compile) map PlayVersion,
       sbtVersion in GlobalScope := buildSbtVersion,
@@ -420,7 +421,7 @@ object PlayBuild extends Build {
   lazy val SbtForkRunPluginProject = PlaySbtPluginProject("SBT-Fork-Run-Plugin", "sbt-fork-run-plugin")
     .settings(
       sbtPlugin := true,
-      publishMavenStyle := false,
+      publishMavenStyle := true,
       libraryDependencies ++= sbtForkRunPluginDependencies)
     .settings(scriptedSettings: _*)
     .settings(
@@ -501,7 +502,7 @@ object PlayBuild extends Build {
   lazy val PlayDocsSbtPlugin = PlaySbtPluginProject("Play-Docs-SBT-Plugin", "play-docs-sbt-plugin")
     .settings(
       sbtPlugin := true,
-      publishMavenStyle := false,
+      publishMavenStyle := true,
       libraryDependencies ++= playDocsSbtPluginDependencies,
       sbtVersion in GlobalScope := buildSbtVersion,
       sbtBinaryVersion in GlobalScope := buildSbtVersionBinaryCompatible,
